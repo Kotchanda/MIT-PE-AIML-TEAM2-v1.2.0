@@ -1,0 +1,57 @@
+{
+  "version": "1.0.3",
+  "session_analytics": {
+    "session_id": "uuid",
+    "timestamp_utc": "ISO-8601",
+    "questions_asked": [
+      "Q_HOSPITAL_LEVEL",
+      "Q_PRICE_POSTURE"
+    ],
+    "answers_summary": {
+      "Q_HOSPITAL_LEVEL": "Private",
+      "Q_PRICE_POSTURE": "Balanced"
+    },
+    "answered_count": 0,
+    "dropoff_question_id": null,
+    "final_plans_presented": [
+      "PLAN_ID_1",
+      "PLAN_ID_2",
+      "PLAN_ID_3"
+    ],
+    "plan_clicked": null,
+    "user_satisfied": null,
+    "time_to_recommendation_seconds": 0,
+    "presented_plan_completeness": {
+      "PLAN_ID_1": 0.8,
+      "PLAN_ID_2": 0.6
+    },
+    "question_ranking_snapshot": {
+      "top_questions": [
+        {
+          "question_id": "Q_HOSPITAL_LEVEL",
+          "rank": 1,
+          "avg_info_gain": 0.65,
+          "dropoff_rate": 0.05
+        }
+      ],
+      "bottom_questions": [
+        {
+          "question_id": "Q_EXCESS_TOLERANCE",
+          "rank": 8,
+          "avg_info_gain": 0.1,
+          "dropoff_rate": 0.18
+        }
+      ],
+      "deltas_since_last_release": [
+        {
+          "question_id": "Q_MATERNITY",
+          "rank_change": 2
+        }
+      ]
+    }
+  },
+  "privacy_notes": [
+    "Do not store names, emails, phone numbers, addresses, age, or premium quotes.",
+    "Store only session-level interaction metrics needed to tune question ordering."
+  ]
+}

@@ -1,0 +1,292 @@
+{
+  "package": "irish-health-insurance-chooser",
+  "version": "1.0.4",
+  "generated_utc": "2026-02-01T20:13:50Z",
+  "priority_formula": "effective_priority = base_priority + (info_gain_weight * expected_info_gain) + (popularity_weight * popularity_score) - (friction_weight * friction_score)",
+  "questions": [
+    {
+      "question_id": "Q_HOSPITAL_LEVEL",
+      "base_priority": 10,
+      "question_text": "What level of hospital access do you want?",
+      "helper_text": "Hospital access is typically the strongest driver of plan suitability (Public vs Private vs Hi-Tech).",
+      "answer_type": "single_choice",
+      "answers": [
+        "Public only",
+        "Private",
+        "Hi-Tech"
+      ],
+      "maps_to_fields": [
+        "hospital_cover"
+      ],
+      "elimination_rules": [
+        {
+          "if_answer": "Public only",
+          "require": [
+            "PUBLIC",
+            "PRIVATE",
+            "HI_TECH"
+          ]
+        },
+        {
+          "if_answer": "Private",
+          "require": [
+            "PRIVATE",
+            "HI_TECH"
+          ]
+        },
+        {
+          "if_answer": "Hi-Tech",
+          "require": [
+            "HI_TECH"
+          ]
+        }
+      ],
+      "scoring_weights": {
+        "Public only": {
+          "hospital_cover": 0
+        },
+        "Private": {
+          "hospital_cover": 1
+        },
+        "Hi-Tech": {
+          "hospital_cover": 2
+        }
+      },
+      "popularity_weight": 1.4,
+      "info_gain_weight": 2.0,
+      "friction_weight": 0.2
+    },
+    {
+      "question_id": "Q_PRICE_POSTURE",
+      "base_priority": 20,
+      "question_text": "Which best describes your approach?",
+      "helper_text": "This helps choose an appropriate tier before fine-tuning benefits.",
+      "answer_type": "single_choice",
+      "answers": [
+        "Price-sensitive",
+        "Balanced",
+        "Benefit-maximizing"
+      ],
+      "maps_to_fields": [
+        "plan_tier"
+      ],
+      "elimination_rules": [],
+      "scoring_weights": {
+        "Price-sensitive": {
+          "plan_tier_preference": {
+            "BASIC": 2,
+            "MID": 1,
+            "HIGH": 0
+          }
+        },
+        "Balanced": {
+          "plan_tier_preference": {
+            "BASIC": 1,
+            "MID": 2,
+            "HIGH": 1
+          }
+        },
+        "Benefit-maximizing": {
+          "plan_tier_preference": {
+            "BASIC": 0,
+            "MID": 1,
+            "HIGH": 2
+          }
+        }
+      },
+      "popularity_weight": 1.1,
+      "info_gain_weight": 1.2,
+      "friction_weight": 0.3
+    },
+    {
+      "question_id": "Q_MATERNITY",
+      "base_priority": 30,
+      "question_text": "Is maternity cover important in the next 2–3 years?",
+      "helper_text": "If maternity is important, plans without maternity cover (or with limited maternity) may be unsuitable.",
+      "answer_type": "boolean",
+      "answers": [
+        true,
+        false
+      ],
+      "maps_to_fields": [
+        "maternity_cover",
+        "maternity_waiting_months"
+      ],
+      "elimination_rules": [
+        {
+          "if_answer": true,
+          "require": true,
+          "field": "maternity_cover"
+        }
+      ],
+      "scoring_weights": {
+        "true": {
+          "maternity_cover": 1
+        },
+        "false": {
+          "maternity_cover": 0
+        }
+      },
+      "popularity_weight": 1.2,
+      "info_gain_weight": 1.3,
+      "friction_weight": 0.4
+    },
+    {
+      "question_id": "Q_OUTPATIENT_USAGE",
+      "base_priority": 40,
+      "question_text": "How often do you expect to use GP and outpatient services?",
+      "helper_text": "Higher outpatient usage typically benefits from stronger outpatient allowances and coverage.",
+      "answer_type": "single_choice",
+      "answers": [
+        "Rarely",
+        "Sometimes",
+        "Often"
+      ],
+      "maps_to_fields": [
+        "outpatient_cover",
+        "gp_visits"
+      ],
+      "elimination_rules": [],
+      "scoring_weights": {
+        "Rarely": {
+          "outpatient_importance": 0
+        },
+        "Sometimes": {
+          "outpatient_importance": 1
+        },
+        "Often": {
+          "outpatient_importance": 2
+        }
+      },
+      "popularity_weight": 1.2,
+      "info_gain_weight": 1.1,
+      "friction_weight": 0.3
+    },
+    {
+      "question_id": "Q_MENTAL_HEALTH",
+      "base_priority": 50,
+      "question_text": "Is mental health cover important to you?",
+      "helper_text": "If mental health benefits are important, prioritize plans where these benefits are clearly stated.",
+      "answer_type": "boolean",
+      "answers": [
+        true,
+        false
+      ],
+      "maps_to_fields": [
+        "mental_health"
+      ],
+      "elimination_rules": [
+        {
+          "if_answer": true,
+          "require": true,
+          "field": "mental_health"
+        }
+      ],
+      "scoring_weights": {
+        "true": {
+          "mental_health": 1
+        },
+        "false": {
+          "mental_health": 0
+        }
+      },
+      "popularity_weight": 1.1,
+      "info_gain_weight": 1.0,
+      "friction_weight": 0.4
+    },
+    {
+      "question_id": "Q_ROOM_PREFERENCE",
+      "base_priority": 60,
+      "question_text": "Do you prefer private/semi-private room cover where available?",
+      "helper_text": "Room cover can be conditional and may vary by hospital and plan tier.",
+      "answer_type": "single_choice",
+      "answers": [
+        "Not important",
+        "Semi-private is fine",
+        "Private preferred"
+      ],
+      "maps_to_fields": [
+        "semi_private_room",
+        "private_room"
+      ],
+      "elimination_rules": [],
+      "scoring_weights": {
+        "Not important": {
+          "room_importance": 0
+        },
+        "Semi-private is fine": {
+          "room_importance": 1
+        },
+        "Private preferred": {
+          "room_importance": 2
+        }
+      },
+      "popularity_weight": 1.0,
+      "info_gain_weight": 0.8,
+      "friction_weight": 0.5
+    },
+    {
+      "question_id": "Q_OVERSEAS_EMERGENCY",
+      "base_priority": 70,
+      "question_text": "Do you need overseas emergency cover?",
+      "helper_text": "Some plans include overseas emergency cover; planned overseas care is different and often excluded.",
+      "answer_type": "boolean",
+      "answers": [
+        true,
+        false
+      ],
+      "maps_to_fields": [
+        "overseas_emergency"
+      ],
+      "elimination_rules": [
+        {
+          "if_answer": true,
+          "require": true,
+          "field": "overseas_emergency"
+        }
+      ],
+      "scoring_weights": {
+        "true": {
+          "overseas_emergency": 1
+        },
+        "false": {
+          "overseas_emergency": 0
+        }
+      },
+      "popularity_weight": 0.9,
+      "info_gain_weight": 0.9,
+      "friction_weight": 0.4
+    },
+    {
+      "question_id": "Q_EXCESS_TOLERANCE",
+      "base_priority": 80,
+      "question_text": "Are you comfortable paying an excess/co-payment to reduce premium?",
+      "helper_text": "Excess can reduce premiums but increases out-of-pocket costs when you claim.",
+      "answer_type": "single_choice",
+      "answers": [
+        "Prefer no excess",
+        "Small excess is fine",
+        "Excess is fine"
+      ],
+      "maps_to_fields": [
+        "excess_required",
+        "excess_amount_text"
+      ],
+      "elimination_rules": [],
+      "scoring_weights": {
+        "Prefer no excess": {
+          "excess_tolerance": 0
+        },
+        "Small excess is fine": {
+          "excess_tolerance": 1
+        },
+        "Excess is fine": {
+          "excess_tolerance": 2
+        }
+      },
+      "popularity_weight": 0.8,
+      "info_gain_weight": 0.7,
+      "friction_weight": 0.3
+    }
+  ]
+}

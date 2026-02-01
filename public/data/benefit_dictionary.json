@@ -1,0 +1,88 @@
+{
+  "version": "1.2.0",
+  "generated_utc": "2026-02-01T20:13:50Z",
+  "null_handling": {
+    "allowed": true,
+    "meaning": "Unknown/not yet populated from a public source. Treat null as 'unknown' (not false)."
+  },
+  "fields": {
+    "hospital_cover": {
+      "type": "enum|null",
+      "allowed": [
+        "PUBLIC",
+        "PRIVATE",
+        "HI_TECH"
+      ]
+    },
+    "plan_tier": {
+      "type": "enum|null",
+      "allowed": [
+        "BASIC",
+        "MID",
+        "HIGH"
+      ]
+    },
+    "semi_private_room": {
+      "type": "boolean|null"
+    },
+    "private_room": {
+      "type": "boolean|null"
+    },
+    "day_case": {
+      "type": "boolean|null"
+    },
+    "outpatient_cover": {
+      "type": "boolean|null"
+    },
+    "gp_visits": {
+      "type": "boolean|null"
+    },
+    "maternity_cover": {
+      "type": "boolean|null"
+    },
+    "maternity_waiting_months": {
+      "type": "integer|null"
+    },
+    "mental_health": {
+      "type": "boolean|null"
+    },
+    "cardiac_cover": {
+      "type": "boolean|null"
+    },
+    "cancer_cover": {
+      "type": "boolean|null"
+    },
+    "overseas_emergency": {
+      "type": "boolean|null"
+    },
+    "overseas_planned": {
+      "type": "boolean|null"
+    },
+    "excess_required": {
+      "type": "boolean|null"
+    },
+    "excess_amount_text": {
+      "type": "text|null"
+    },
+    "source_url": {
+      "type": "text",
+      "required": true
+    },
+    "last_verified": {
+      "type": "date",
+      "required": true
+    },
+    "null_key_count": {
+      "type": "integer",
+      "description": "Number of NULLs across key decision fields (computed)."
+    },
+    "completeness_score": {
+      "type": "number",
+      "description": "1 - (null_key_count / number_of_key_fields). Range 0.0–1.0 (computed)."
+    }
+  },
+  "notes": [
+    "Avoid scraping premiums from quote engines; use user-entered budget preference if needed.",
+    "Prefer plan-specific PDFs/pages over index pages for source_url."
+  ]
+}

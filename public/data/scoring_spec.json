@@ -1,0 +1,80 @@
+{
+  "version": "1.2.0",
+  "generated_utc": "2026-02-01T20:13:50Z",
+  "null_scoring": "Treat null as 0 for scoring contributions; do not eliminate on null—flag for verification instead.",
+  "hard_filters": [
+    {
+      "id": "HF_HOSPITAL_MIN",
+      "description": "Enforce minimum hospital cover from Q_HOSPITAL_LEVEL. If hospital_cover is null, keep but flag 'verify'."
+    },
+    {
+      "id": "HF_MATERNITY_REQUIRED",
+      "description": "If maternity required, eliminate only if maternity_cover == false; keep if null and flag."
+    },
+    {
+      "id": "HF_MENTAL_REQUIRED",
+      "description": "If mental health required, eliminate only if mental_health == false; keep if null and flag."
+    },
+    {
+      "id": "HF_OVERSEAS_REQUIRED",
+      "description": "If overseas required, eliminate only if overseas_emergency == false; keep if null and flag."
+    }
+  ],
+  "weights": {
+    "hospital_cover": 40,
+    "outpatient": 25,
+    "mental_health": 15,
+    "room": 10,
+    "overseas_emergency": 10
+  },
+  "feature_scoring": {
+    "hospital_cover": {
+      "PUBLIC": 0,
+      "PRIVATE": 1,
+      "HI_TECH": 2
+    },
+    "outpatient": {
+      "outpatient_cover": 1,
+      "gp_visits": 1
+    },
+    "mental_health": {
+      "mental_health": 1
+    },
+    "room": {
+      "semi_private_room": 1,
+      "private_room": 2
+    },
+    "overseas_emergency": {
+      "overseas_emergency": 1
+    }
+  },
+  "tier_preference_multiplier": {
+    "Price-sensitive": {
+      "BASIC": 1.1,
+      "MID": 1.0,
+      "HIGH": 0.9
+    },
+    "Balanced": {
+      "BASIC": 1.0,
+      "MID": 1.05,
+      "HIGH": 1.0
+    },
+    "Benefit-maximizing": {
+      "BASIC": 0.9,
+      "MID": 1.0,
+      "HIGH": 1.1
+    }
+  },
+  "explainability": {
+    "top_drivers_count": 3,
+    "include_tradeoffs": true,
+    "include_sources": true,
+    "include_verification_flags": true,
+    "verification_flag_text": "Some benefits are not yet populated for this plan (public source verification needed)."
+  },
+  "tie_breakers": [
+    "Prefer higher score(plan)",
+    "If scores within 5 points, prefer higher completeness_score",
+    "If still tied, prefer fewer verification flags (fewer NULLs on mapped must-have fields)"
+  ]
+}
