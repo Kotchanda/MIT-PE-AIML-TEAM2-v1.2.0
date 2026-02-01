@@ -1,194 +1,172 @@
 /**
- * Main Page - Irish Health Insurance Chooser v2.0
- * Integrates advanced features from MIT-PE-AIML-TEAM2 blueprint
+ * Home Page - Irish Health Insurance Chooser v3.0
+ * Full MIT-PE-AIML-TEAM2 v1.2.0 blueprint implementation
+ * Processes 272 insurance plans with NULL-safe scoring
  */
 
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { QuizSection } from '@/components/sections/QuizSection'
-import { RecommendationResultsV2 } from '@/components/sections/RecommendationResultsV2'
-import ProviderOverview from '@/components/sections/ProviderOverview'
-import ComparisonTable from '@/components/sections/ComparisonTable'
+import { ResultsSection } from '@/components/sections/ResultsSection'
 import { ConsentGate } from '@/components/ConsentGate'
 import { PostSessionStatsPanel } from '@/components/PostSessionStatsPanel'
-import { getRecommendationsV2 } from '@/lib/recommendation-engine-v2'
-import { getSessionTracker, getMockQuestionRankingSnapshot } from '@/lib/session-analytics'
-import type { UserPreferences, ComparisonResult } from '@/lib/types'
+import { loadAllBlueprintData } from '@/lib/load-blueprint-data'
+import type { ComparisonResult } from '@/lib/types'
+
+/**
+ * Page states:
+ * - 'consent': User hasn't accepted consent gate
+ * - 'quiz': User is answering quiz questions
+ * - 'results': Showing recommendations
+ * - 'stats': Showing post-session statistics
+ */
+type PageState = 'consent' | 'quiz' | 'results' | 'stats'
 
 export default function Home() {
-  const [preferences, setPreferences] = useState<UserPreferences>({
-    adults: 1,
-    children: 0,
-    dependents: 0,
-  })
-  const [recommendations, setRecommendations] = useState<ComparisonResult[]>([])
-  const [showResults, setShowResults] = useState(false)
-  const [showConsentGate, setShowConsentGate] = useState(true)
-  const [showPostSessionStats, setShowPostSessionStats] = useState(false)
-  const [userSatisfied, setUserSatisfied] = useState<boolean | null>(null)
+  const [pageState, setPageState] = useState<PageState>('consent')
+  const [results, setResults] = useState<ComparisonResult[]>([])
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Initialize session tracker
+  /**
+   * Load all blueprint data on component mount
+   * This pre-loads the 272 plans, question bank, scoring spec, etc.
+   */
   useEffect(() => {
-    const tracker = getSessionTracker()
-    // Track initial page load
-    tracker.recordQuestion('Q_INITIAL_LOAD')
+    const initializeBlueprint = async () => {
+      try {
+        console.log('🚀 Initializing MIT-PE-AIML-TEAM2 v1.2.0 blueprint...')
+        await loadAllBlueprintData()
+        console.log('✅ Blueprint data loaded successfully')
+        setLoading(false)
+      } catch (err) {
+        console.error('❌ Error loading blueprint data:', err)
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to load blueprint data. Please refresh the page.'
+        )
+        setLoading(false)
+      }
+    }
+
+    initializeBlueprint()
   }, [])
 
   /**
+   * Handle consent acceptance
+   * User must accept privacy/consent gate before proceeding
+   */
+  const handleConsentAccept = () => {
+    console.log('✅ User accepted consent gate')
+    setPageState('quiz')
+  }
+
+  /**
    * Handle quiz completion
-   * Generates recommendations and tracks session
+   * Called when user submits quiz answers
+   * Receives top 5 recommendations from engine v3
    */
-  const handleQuizComplete = (userPrefs: UserPreferences) => {
-    const tracker = getSessionTracker()
-
-    // Update preferences
-    setPreferences(userPrefs)
-
-    // Generate recommendations using v2 engine
-    const results = getRecommendationsV2(userPrefs)
-    setRecommendations(results)
-
-    // Track plans presented
-    tracker.recordPlansPresented(results.map((r) => r.plan.id))
-
-    // Show results
-    setShowResults(true)
-
-    // Scroll to results
-    setTimeout(() => {
-      const resultsTab = document.querySelector('[value="results"]')
-      resultsTab?.scrollIntoView({ behavior: 'smooth' })
-    }, 100)
+  const handleQuizComplete = (quizResults: ComparisonResult[], quizStats: any) => {
+    console.log('🎉 Quiz completed, showing results')
+    setResults(quizResults)
+    setStats(quizStats)
+    setPageState('results')
   }
 
   /**
-   * Handle plan selection
+   * Handle results completion
+   * User has reviewed recommendations, show post-session stats
    */
-  const handleSelectPlan = (planId: string) => {
-    const tracker = getSessionTracker()
-    tracker.recordPlanClicked(planId)
-
-    // In production, this would navigate to quote page
-    console.log('Selected plan:', planId)
+  const handleResultsComplete = () => {
+    console.log('📊 Showing post-session statistics')
+    setPageState('stats')
   }
 
   /**
-   * Handle consent decision
+   * Handle restart
+   * Reset to quiz state to allow user to try again
    */
-  const handleConsent = (consented: boolean) => {
-    setShowConsentGate(false)
-    // In production, this would enable/disable analytics tracking
-    console.log('Analytics consent:', consented)
+  const handleRestart = () => {
+    console.log('🔄 Restarting quiz')
+    setResults([])
+    setStats(null)
+    setPageState('quiz')
   }
 
-  /**
-   * Handle satisfaction rating
-   */
-  const handleSatisfactionRating = (satisfied: boolean) => {
-    const tracker = getSessionTracker()
-    tracker.recordSatisfaction(satisfied)
-    setUserSatisfied(satisfied)
-
-    // Show post-session stats after rating
-    setTimeout(() => {
-      setShowPostSessionStats(true)
-    }, 500)
+  // Show loading state while blueprint data is being loaded
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <h2 className="text-2xl font-semibold text-gray-900 mb-2">
+            Loading Irish Health Insurance Chooser
+          </h2>
+          <p className="text-gray-600">Initializing 272 insurance plans with blueprint data...</p>
+        </div>
+      </div>
+    )
   }
 
+  // Show error state if blueprint data failed to load
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md text-center">
+          <h2 className="text-2xl font-semibold text-red-600 mb-4">Error Loading Application</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg"
+          >
+            Refresh Page
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Render based on current page state
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Consent Gate */}
-      {showConsentGate && <ConsentGate onConsent={handleConsent} />}
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-12">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="text-4xl">❤️</div>
-            <h1 className="text-4xl font-bold">Irish Health Insurance Chooser</h1>
-          </div>
-          <p className="text-lg text-muted-foreground">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+            ❤️ Irish Health Insurance Chooser
+          </h1>
+          <p className="text-xl text-gray-600">
             Find the perfect health insurance plan for your needs and budget
           </p>
         </div>
 
-        {/* Main Tabs */}
-        <Tabs defaultValue="find-plan" className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
-            <TabsTrigger value="find-plan">Find Plan</TabsTrigger>
-            <TabsTrigger value="providers">Providers</TabsTrigger>
-            <TabsTrigger value="compare">Compare</TabsTrigger>
-            <TabsTrigger value="results" disabled={!showResults}>
-              Results
-            </TabsTrigger>
-          </TabsList>
+        {/* Page content based on state */}
+        {pageState === 'consent' && (
+          <ConsentGate onAccept={handleConsentAccept} />
+        )}
 
-          {/* Find Plan Tab - Interactive Quiz */}
-          <TabsContent value="find-plan" className="space-y-6">
-            <QuizSection onComplete={handleQuizComplete} />
-          </TabsContent>
+        {pageState === 'quiz' && (
+          <QuizSection onComplete={handleQuizComplete} />
+        )}
 
-          {/* Providers Tab */}
-          <TabsContent value="providers" className="space-y-6">
-            <ProviderOverview />
-          </TabsContent>
+        {pageState === 'results' && (
+          <ResultsSection
+            results={results}
+            stats={stats}
+            onComplete={handleResultsComplete}
+            onRestart={handleRestart}
+          />
+        )}
 
-          {/* Compare Tab */}
-          <TabsContent value="compare" className="space-y-6">
-            <ComparisonTable />
-          </TabsContent>
-
-          {/* Results Tab */}
-          <TabsContent value="results" className="space-y-6">
-            {showResults && (
-              <>
-                {/* Recommendations */}
-                <RecommendationResultsV2 results={recommendations} onSelectPlan={handleSelectPlan} />
-
-                {/* Satisfaction Rating */}
-                <div className="mt-8 p-6 bg-white rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4">How helpful were these recommendations?</h3>
-                  <div className="flex gap-4">
-                    <button
-                      onClick={() => handleSatisfactionRating(true)}
-                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                        userSatisfied === true
-                          ? 'bg-green-600 text-white'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
-                      }`}
-                    >
-                      😊 Very Helpful
-                    </button>
-                    <button
-                      onClick={() => handleSatisfactionRating(false)}
-                      className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                        userSatisfied === false
-                          ? 'bg-red-600 text-white'
-                          : 'bg-slate-100 hover:bg-slate-200 text-slate-900'
-                      }`}
-                    >
-                      😕 Not Helpful
-                    </button>
-                  </div>
-                </div>
-
-                {/* Post-Session Stats Panel */}
-                {showPostSessionStats && (
-                  <PostSessionStatsPanel
-                    topQuestions={getMockQuestionRankingSnapshot().top_questions}
-                    bottomQuestions={getMockQuestionRankingSnapshot().bottom_questions}
-                    deltas={getMockQuestionRankingSnapshot().deltas_since_last_release}
-                    timeSpent={getSessionTracker().getElapsedTime()}
-                    questionsAnswered={Object.keys(preferences).length}
-                    userSatisfied={userSatisfied}
-                  />
-                )}
-              </>
-            )}
-          </TabsContent>
-        </Tabs>
+        {pageState === 'stats' && (
+          <PostSessionStatsPanel
+            stats={stats}
+            onRestart={handleRestart}
+          />
+        )}
       </div>
     </main>
   )

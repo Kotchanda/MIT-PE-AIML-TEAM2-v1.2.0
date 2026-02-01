@@ -1,7 +1,7 @@
 /**
- * Quiz Section Component
- * Interactive questionnaire with session tracking
- * Based on MIT-PE-AIML-TEAM2 v1.2.0 blueprint
+ * Quiz Section Component - Adaptive Questionnaire
+ * Implements MIT-PE-AIML-TEAM2 v1.2.0 blueprint with 272 insurance plans
+ * Uses NULL-safe scoring and tie-breaker logic
  */
 
 'use client'
@@ -9,323 +9,297 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Slider } from '@/components/ui/slider'
 import { Checkbox } from '@/components/ui/checkbox'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import { Progress } from '@/components/ui/progress'
-import { getSessionTracker } from '@/lib/session-analytics'
-import type { UserPreferences } from '@/lib/types'
+import { getRecommendationsV3, getPlanStatistics } from '@/lib/recommendation-engine-v3'
+import type { UserPreferences, ComparisonResult } from '@/lib/types'
 
 interface QuizSectionProps {
-  onComplete: (preferences: UserPreferences) => void
+  onComplete: (results: ComparisonResult[], stats: any) => void
 }
 
 /**
- * Quiz questions with priority weights from blueprint
- * Higher priority = more informative for recommendations
+ * Quiz questions - Adaptive questionnaire from blueprint
+ * Each question maps to user preferences that drive the recommendation engine
  */
 const QUIZ_QUESTIONS = [
   {
-    id: 'Q_HOSPITAL_LEVEL',
-    priority: 1,
-    title: 'Hospital Level Preference',
-    description: 'What type of hospital accommodation do you prefer?',
+    id: 'hospital-level',
+    question: 'What level of hospital cover do you prefer?',
     type: 'radio',
     options: [
-      { value: 'Public only', label: 'Public hospitals only' },
-      { value: 'Private', label: 'Private hospitals' },
-      { value: 'Hi-Tech', label: 'Hi-tech private facilities' },
+      { label: 'Public hospitals only', value: 'PUBLIC' },
+      { label: 'Semi-private rooms', value: 'SEMI_PRIVATE' },
+      { label: 'Private hospitals', value: 'PRIVATE' },
+      { label: 'High-tech private facilities', value: 'HI_TECH' },
     ],
+    helper: 'This is the most important factor in plan selection',
   },
   {
-    id: 'Q_FAMILY_SIZE',
-    priority: 2,
-    title: 'Family Composition',
-    description: 'How many people need to be covered?',
-    type: 'family-size',
-  },
-  {
-    id: 'Q_PRICE_POSTURE',
-    priority: 3,
-    title: 'Budget & Price Sensitivity',
-    description: 'What is your approach to pricing?',
+    id: 'outpatient-cover',
+    question: 'Do you need outpatient cover?',
     type: 'radio',
     options: [
-      { value: 'Price-sensitive', label: 'Price-sensitive (budget-conscious)' },
-      { value: 'Balanced', label: 'Balanced (value for money)' },
-      { value: 'Benefit-maximizing', label: 'Benefit-maximizing (comprehensive coverage)' },
+      { label: 'Yes, outpatient services are important', value: true },
+      { label: 'No, not necessary for me', value: false },
     ],
+    helper: 'Covers visits to specialists and clinics outside hospitals',
   },
   {
-    id: 'Q_MATERNITY',
-    priority: 4,
-    title: 'Maternity Coverage',
-    description: 'Do you need maternity coverage?',
-    type: 'checkbox',
+    id: 'gp-visits',
+    question: 'Do you want GP visit coverage?',
+    type: 'radio',
+    options: [
+      { label: 'Yes, I visit my GP regularly', value: true },
+      { label: 'No, I rarely need GP services', value: false },
+    ],
+    helper: 'Covers general practitioner consultations',
   },
   {
-    id: 'Q_MENTAL_HEALTH',
-    priority: 5,
-    title: 'Mental Health Services',
-    description: 'Is mental health coverage important to you?',
-    type: 'checkbox',
+    id: 'maternity',
+    question: 'Do you need maternity cover?',
+    type: 'radio',
+    options: [
+      { label: 'Yes, maternity cover is essential', value: true },
+      { label: 'No, not applicable to me', value: false },
+    ],
+    helper: 'Includes pregnancy, delivery, and postnatal care',
   },
   {
-    id: 'Q_OVERSEAS',
-    priority: 6,
-    title: 'Overseas Coverage',
-    description: 'Do you need overseas emergency coverage?',
-    type: 'checkbox',
+    id: 'mental-health',
+    question: 'Is mental health coverage important?',
+    type: 'radio',
+    options: [
+      { label: 'Yes, mental health support is important', value: true },
+      { label: 'No, not a priority for me', value: false },
+    ],
+    helper: 'Covers counseling, therapy, and psychiatric services',
+  },
+  {
+    id: 'overseas',
+    question: 'Do you need overseas emergency coverage?',
+    type: 'radio',
+    options: [
+      { label: 'Yes, I need this coverage', value: true },
+      { label: 'No, not necessary', value: false },
+    ],
+    helper: 'Emergency medical coverage while traveling abroad',
   },
 ]
 
 export function QuizSection({ onComplete }: QuizSectionProps) {
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, any>>({})
-  const [adults, setAdults] = useState(1)
-  const [children, setChildren] = useState(0)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const tracker = getSessionTracker()
-  const totalSteps = QUIZ_QUESTIONS.length
-  const progress = ((currentStep + 1) / totalSteps) * 100
+  const question = QUIZ_QUESTIONS[currentQuestion]
+  const progress = ((currentQuestion + 1) / QUIZ_QUESTIONS.length) * 100
 
   /**
-   * Handle answer to current question
+   * Handle answer selection
+   * Updates the answers state with the selected value
    */
   const handleAnswer = (value: any) => {
-    const questionId = QUIZ_QUESTIONS[currentStep].id
-
-    // Track question and answer
-    tracker.recordQuestion(questionId)
-    tracker.recordAnswer(questionId, JSON.stringify(value))
-
     setAnswers({
       ...answers,
-      [questionId]: value,
+      [question.id]: value,
     })
-
-    // Auto-advance to next question
-    if (currentStep < totalSteps - 1) {
-      setTimeout(() => {
-        setCurrentStep(currentStep + 1)
-      }, 300)
-    }
   }
 
   /**
-   * Handle family size changes
-   */
-  const handleFamilySizeChange = (type: 'adults' | 'children', value: number) => {
-    if (type === 'adults') {
-      setAdults(Math.max(1, value))
-    } else {
-      setChildren(Math.max(0, value))
-    }
-  }
-
-  /**
-   * Complete quiz and generate recommendations
-   */
-  const handleComplete = () => {
-    const questionId = QUIZ_QUESTIONS[currentStep].id
-    tracker.recordQuestion(questionId)
-    tracker.recordAnswer(questionId, JSON.stringify({ adults, children }))
-
-    // Build preferences object
-    const preferences: UserPreferences = {
-      adults,
-      children,
-      dependents: 0,
-      hospitalLevel: answers['Q_HOSPITAL_LEVEL'] || 'Private',
-      pricePosture: answers['Q_PRICE_POSTURE'] || 'Balanced',
-      needsMaternity: answers['Q_MATERNITY'] || false,
-      needsMentalHealth: answers['Q_MENTAL_HEALTH'] || false,
-      needsOverseas: answers['Q_OVERSEAS'] || false,
-    }
-
-    // Notify parent component
-    onComplete(preferences)
-  }
-
-  /**
-   * Navigate to previous question
-   */
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
-
-  /**
-   * Navigate to next question
+   * Move to next question
+   * Validates that current question is answered before proceeding
    */
   const handleNext = () => {
-    if (currentStep < totalSteps - 1) {
-      setCurrentStep(currentStep + 1)
+    if (answers[question.id] === undefined) {
+      setError('Please select an answer before continuing')
+      return
+    }
+    setError(null)
+
+    if (currentQuestion < QUIZ_QUESTIONS.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
     }
   }
 
-  const currentQuestion = QUIZ_QUESTIONS[currentStep]
-  const isAnswered = answers[currentQuestion.id] !== undefined
-  const isLastStep = currentStep === totalSteps - 1
+  /**
+   * Move to previous question
+   */
+  const handlePrevious = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1)
+      setError(null)
+    }
+  }
+
+  /**
+   * Submit quiz and get recommendations
+   * Converts quiz answers to UserPreferences format
+   * Calls recommendation engine v3 with 272 plans
+   */
+  const handleSubmit = async () => {
+    if (answers[question.id] === undefined) {
+      setError('Please select an answer before submitting')
+      return
+    }
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Convert quiz answers to UserPreferences format
+      const preferences: UserPreferences = {
+        hospitalLevel: answers['hospital-level'],
+        outpatientCover: answers['outpatient-cover'],
+        gpVisits: answers['gp-visits'],
+        maternityNeeded: answers['maternity'],
+        mentalHealthCover: answers['mental-health'],
+        overseasCoverage: answers['overseas'],
+      }
+
+      console.log('📋 Quiz answers:', answers)
+      console.log('🎯 User preferences:', preferences)
+
+      // Get recommendations from engine v3 (processes 272 plans)
+      const results = await getRecommendationsV3(preferences)
+      console.log('✅ Recommendations generated:', results.length)
+
+      // Get plan statistics for post-session panel
+      const stats = await getPlanStatistics()
+      console.log('📊 Plan statistics:', stats)
+
+      // Call parent component with results
+      onComplete(results, stats)
+    } catch (err) {
+      console.error('❌ Error generating recommendations:', err)
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'Failed to generate recommendations. Please try again.'
+      )
+      setLoading(false)
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      {/* Progress Bar */}
-      <Card className="p-6">
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold">Question {currentStep + 1} of {totalSteps}</h3>
-            <span className="text-sm text-muted-foreground">{Math.round(progress)}%</span>
-          </div>
-          <Progress value={progress} className="h-2" />
+    <div className="w-full max-w-2xl mx-auto">
+      {/* Progress bar */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm font-medium text-muted-foreground">
+            Question {currentQuestion + 1} of {QUIZ_QUESTIONS.length}
+          </span>
+          <span className="text-sm font-medium text-muted-foreground">{Math.round(progress)}%</span>
         </div>
+        <Progress value={progress} className="h-2" />
+      </div>
+
+      {/* Question card */}
+      <Card className="p-8 mb-8">
+        {/* Question title */}
+        <h2 className="text-2xl font-semibold mb-2">{question.question}</h2>
+
+        {/* Helper text */}
+        {question.helper && (
+          <p className="text-sm text-muted-foreground mb-6">{question.helper}</p>
+        )}
+
+        {/* Answer options */}
+        <div className="space-y-4 mb-8">
+          {question.type === 'radio' ? (
+            <RadioGroup value={answers[question.id]?.toString() || ''} onValueChange={handleAnswer}>
+              {question.options.map((option) => (
+                <div key={option.value} className="flex items-center space-x-3">
+                  <RadioGroupItem
+                    value={option.value.toString()}
+                    id={`option-${option.value}`}
+                  />
+                  <Label
+                    htmlFor={`option-${option.value}`}
+                    className="text-base font-normal cursor-pointer flex-1"
+                  >
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </RadioGroup>
+          ) : (
+            <div className="space-y-3">
+              {question.options.map((option) => (
+                <div key={option.value} className="flex items-center space-x-3">
+                  <Checkbox
+                    id={`option-${option.value}`}
+                    checked={answers[question.id]?.includes(option.value) || false}
+                    onCheckedChange={(checked) => {
+                      const current = answers[question.id] || []
+                      if (checked) {
+                        handleAnswer([...current, option.value])
+                      } else {
+                        handleAnswer(current.filter((v: any) => v !== option.value))
+                      }
+                    }}
+                  />
+                  <Label
+                    htmlFor={`option-${option.value}`}
+                    className="text-base font-normal cursor-pointer flex-1"
+                  >
+                    {option.label}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Error message */}
+        {error && <div className="text-sm text-destructive mb-6 p-3 bg-destructive/10 rounded">{error}</div>}
       </Card>
 
-      {/* Question Card */}
-      <Card className="p-8">
-        <div className="space-y-6">
-          {/* Question Title */}
-          <div>
-            <h2 className="text-2xl font-bold mb-2">{currentQuestion.title}</h2>
-            <p className="text-muted-foreground">{currentQuestion.description}</p>
-          </div>
-
-          {/* Question Content */}
-          <div className="space-y-4">
-            {currentQuestion.type === 'radio' && (
-              <RadioGroup value={answers[currentQuestion.id] || ''} onValueChange={handleAnswer}>
-                <div className="space-y-3">
-                  {currentQuestion.options?.map((option) => (
-                    <div key={option.value} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option.value} id={option.value} />
-                      <Label htmlFor={option.value} className="cursor-pointer font-medium">
-                        {option.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </RadioGroup>
-            )}
-
-            {currentQuestion.type === 'checkbox' && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={currentQuestion.id}
-                  checked={answers[currentQuestion.id] || false}
-                  onCheckedChange={handleAnswer}
-                />
-                <Label htmlFor={currentQuestion.id} className="cursor-pointer font-medium">
-                  Yes, I need this coverage
-                </Label>
-              </div>
-            )}
-
-            {currentQuestion.type === 'family-size' && (
-              <div className="space-y-6">
-                {/* Adults */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="font-medium">Adults</Label>
-                    <span className="text-2xl font-bold text-blue-600">{adults}</span>
-                  </div>
-                  <Slider
-                    value={[adults]}
-                    onValueChange={(value) => handleFamilySizeChange('adults', value[0])}
-                    min={1}
-                    max={5}
-                    step={1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>1</span>
-                    <span>5+</span>
-                  </div>
-                </div>
-
-                {/* Children */}
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <Label className="font-medium">Children</Label>
-                    <span className="text-2xl font-bold text-blue-600">{children}</span>
-                  </div>
-                  <Slider
-                    value={[children]}
-                    onValueChange={(value) => handleFamilySizeChange('children', value[0])}
-                    min={0}
-                    max={5}
-                    step={1}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-xs text-muted-foreground">
-                    <span>0</span>
-                    <span>5+</span>
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-900">
-                    <strong>Total coverage needed:</strong> {adults} adult{adults !== 1 ? 's' : ''}{' '}
-                    {children > 0 && `+ ${children} child${children !== 1 ? 'ren' : ''}`}
-                  </p>
-                </div>
-
-                {/* Mark as answered */}
-                <Button
-                  onClick={() => handleAnswer({ adults, children })}
-                  className="w-full bg-blue-600 hover:bg-blue-700"
-                >
-                  Confirm Family Size
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Navigation Buttons */}
-      <div className="flex gap-4 justify-between">
+      {/* Navigation buttons */}
+      <div className="flex gap-4">
         <Button
-          onClick={handlePrevious}
           variant="outline"
-          disabled={currentStep === 0}
+          onClick={handlePrevious}
+          disabled={currentQuestion === 0 || loading}
           className="flex-1"
         >
           ← Previous
         </Button>
 
-        {!isLastStep ? (
+        {currentQuestion === QUIZ_QUESTIONS.length - 1 ? (
           <Button
-            onClick={handleNext}
-            className="flex-1 bg-blue-600 hover:bg-blue-700"
-            disabled={currentQuestion.type === 'family-size' && !isAnswered}
+            onClick={handleSubmit}
+            disabled={loading || answers[question.id] === undefined}
+            className="flex-1 bg-green-600 hover:bg-green-700"
           >
-            Next →
+            {loading ? 'Generating recommendations...' : 'Get Recommendations ✓'}
           </Button>
         ) : (
           <Button
-            onClick={handleComplete}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-            size="lg"
+            onClick={handleNext}
+            disabled={loading || answers[question.id] === undefined}
+            className="flex-1"
           >
-            Get Recommendations ✓
+            Next →
           </Button>
         )}
       </div>
 
-      {/* Progress Indicator */}
-      <div className="flex gap-2 justify-center">
-        {QUIZ_QUESTIONS.map((_, idx) => (
-          <div
-            key={idx}
-            className={`h-2 w-2 rounded-full transition-colors ${
-              idx <= currentStep ? 'bg-blue-600' : 'bg-slate-300'
-            }`}
-          />
-        ))}
-      </div>
+      {/* Loading indicator */}
+      {loading && (
+        <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin h-5 w-5 border-2 border-blue-600 border-t-transparent rounded-full" />
+            <div>
+              <p className="font-medium text-blue-900">Processing your preferences...</p>
+              <p className="text-sm text-blue-700">Analyzing 272 insurance plans with NULL-safe scoring</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
