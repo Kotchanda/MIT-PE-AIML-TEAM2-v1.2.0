@@ -30,11 +30,12 @@ async function scorePlan(
   // Base score from tier preference
   let score = 0
 
-  // Hospital cover scoring (most important)
+  // Hospital cover scoring (most important - 40 points)
   if (preferences.hospitalLevel) {
     const hospitalScore = scoringSpec.feature_scoring.hospital_cover[preferences.hospitalLevel] || 0
-    breakdown['hospital_cover'] = hospitalScore
-    score += hospitalScore
+    const weightedScore = hospitalScore * (scoringSpec.weights.hospital_cover / 2) // Normalize to 0-40
+    breakdown['hospital_cover'] = weightedScore
+    score += weightedScore
 
     // Flag if hospital cover is NULL
     if (plan.hospital_cover === null || plan.hospital_cover === undefined) {
@@ -42,80 +43,68 @@ async function scorePlan(
     }
   }
 
-  // Outpatient cover scoring
+  // Outpatient cover scoring (25 points)
   if (preferences.outpatientCover !== undefined) {
-    const outpatientScore = preferences.outpatientCover
-      ? scoringSpec.feature_scoring.outpatient_cover.yes || 10
-      : scoringSpec.feature_scoring.outpatient_cover.no || 0
-    breakdown['outpatient_cover'] = outpatientScore
-    score += outpatientScore
+    const outpatientScore = preferences.outpatientCover ? 1 : 0
+    const weightedScore = outpatientScore * scoringSpec.weights.outpatient // 25 points if yes, 0 if no
+    breakdown['outpatient_cover'] = weightedScore
+    score += weightedScore
 
     if (plan.outpatient_cover === null || plan.outpatient_cover === undefined) {
       verificationFlags.push('Outpatient cover not verified')
     }
   }
 
-  // GP visits scoring
+  // GP visits scoring (included in outpatient weight)
   if (preferences.gpVisits !== undefined) {
-    const gpScore = preferences.gpVisits
-      ? scoringSpec.feature_scoring.gp_visits.yes || 8
-      : scoringSpec.feature_scoring.gp_visits.no || 0
-    breakdown['gp_visits'] = gpScore
-    score += gpScore
+    const gpScore = preferences.gpVisits ? 1 : 0
+    const weightedScore = gpScore * (scoringSpec.weights.outpatient / 2) // Split with outpatient
+    breakdown['gp_visits'] = weightedScore
+    score += weightedScore
 
     if (plan.gp_visits === null || plan.gp_visits === undefined) {
       verificationFlags.push('GP visits not verified')
     }
   }
 
-  // Maternity cover scoring
+  // Maternity cover scoring (15 points)
   if (preferences.maternityNeeded !== undefined) {
-    const maternityScore = preferences.maternityNeeded
-      ? scoringSpec.feature_scoring.maternity_cover.yes || 15
-      : scoringSpec.feature_scoring.maternity_cover.no || 0
-    breakdown['maternity_cover'] = maternityScore
-    score += maternityScore
+    const maternityScore = preferences.maternityNeeded ? 1 : 0
+    const weightedScore = maternityScore * 15 // 15 points if yes, 0 if no
+    breakdown['maternity_cover'] = weightedScore
+    score += weightedScore
 
     if (plan.maternity_cover === null || plan.maternity_cover === undefined) {
       verificationFlags.push('Maternity cover not verified')
     }
   }
 
-  // Mental health scoring
+  // Mental health scoring (15 points)
   if (preferences.mentalHealthCover !== undefined) {
-    const mentalScore = preferences.mentalHealthCover
-      ? scoringSpec.feature_scoring.mental_health.yes || 10
-      : scoringSpec.feature_scoring.mental_health.no || 0
-    breakdown['mental_health'] = mentalScore
-    score += mentalScore
+    const mentalScore = preferences.mentalHealthCover ? 1 : 0
+    const weightedScore = mentalScore * scoringSpec.weights.mental_health // 15 points if yes, 0 if no
+    breakdown['mental_health'] = weightedScore
+    score += weightedScore
 
     if (plan.mental_health === null || plan.mental_health === undefined) {
       verificationFlags.push('Mental health cover not verified')
     }
   }
 
-  // Overseas coverage scoring
+  // Overseas coverage scoring (10 points)
   if (preferences.overseasCoverage !== undefined) {
-    const overseasScore = preferences.overseasCoverage
-      ? scoringSpec.feature_scoring.overseas_emergency.yes || 12
-      : scoringSpec.feature_scoring.overseas_emergency.no || 0
-    breakdown['overseas_emergency'] = overseasScore
-    score += overseasScore
+    const overseasScore = preferences.overseasCoverage ? 1 : 0
+    const weightedScore = overseasScore * scoringSpec.weights.overseas_emergency // 10 points if yes, 0 if no
+    breakdown['overseas_emergency'] = weightedScore
+    score += weightedScore
 
     if (plan.overseas_emergency === null || plan.overseas_emergency === undefined) {
-      verificationFlags.push('Overseas coverage not verified')
+      verificationFlags.push('Overseas emergency cover not verified')
     }
   }
 
-  // Price sensitivity tier multiplier
-  if (preferences.priceSensitivity) {
-    const tierMultiplier = scoringSpec.tier_multipliers[plan.plan_tier] || 1.0
-    score *= tierMultiplier
-    breakdown['tier_multiplier'] = tierMultiplier
-  }
-
   return {
-    score: Math.round(score * 100) / 100,
+    score,
     breakdown,
     verificationFlags,
   }
@@ -123,72 +112,62 @@ async function scorePlan(
 
 /**
  * Apply elimination rules (hard filters)
- * NULL-safe: only eliminate if value is definitively incompatible
- * @param plans - All plans to filter
- * @param preferences - User preferences
- * @returns Filtered plans that pass all hard filters
+ * Only eliminate if explicitly false; keep null and flag for verification
  */
 function applyEliminationRules(
   plans: HealthInsurancePlan[],
   preferences: UserPreferences
 ): HealthInsurancePlan[] {
   return plans.filter((plan) => {
-    // Must-have hospital cover
-    if (preferences.hospitalLevel === 'PRIVATE' && plan.hospital_cover === 'PUBLIC') {
-      return false // Eliminate: user wants private but plan only offers public
+    // Maternity: eliminate only if explicitly false and user needs it
+    if (preferences.maternityNeeded === true && plan.maternity_cover === false) {
+      return false
     }
 
-    // Must-have maternity
-    if (preferences.maternityNeeded && !plan.maternity_cover) {
-      return false // Eliminate: user needs maternity but plan doesn't offer it
+    // Mental health: eliminate only if explicitly false and user needs it
+    if (preferences.mentalHealthCover === true && plan.mental_health === false) {
+      return false
     }
 
-    // Must-have mental health
-    if (preferences.mentalHealthCover && !plan.mental_health) {
-      return false // Eliminate: user needs mental health but plan doesn't offer it
+    // Overseas: eliminate only if explicitly false and user needs it
+    if (preferences.overseasCoverage === true && plan.overseas_emergency === false) {
+      return false
     }
 
-    // Must-have overseas coverage
-    if (preferences.overseasCoverage && !plan.overseas_emergency) {
-      return false // Eliminate: user needs overseas but plan doesn't offer it
-    }
-
-    // Keep plan if any field is NULL (unknown) - don't eliminate
+    // Keep all others (including nulls - they'll be flagged for verification)
     return true
   })
 }
 
 /**
- * Tie-breaker logic (when plans have similar scores)
- * 1. Highest score
- * 2. If within 5 points → prefer higher completeness_score
- * 3. If still tied → prefer fewer verification flags
+ * Compare two plans for sorting (tie-breaker logic)
+ * 1. Higher score wins
+ * 2. If within 5 points, higher completeness_score wins
+ * 3. If still tied, fewer verification flags wins
  */
 function comparePlans(
   a: { plan: HealthInsurancePlan; score: number; verificationFlags: string[] },
   b: { plan: HealthInsurancePlan; score: number; verificationFlags: string[] }
 ): number {
-  // Rule 1: Highest score
+  // Primary: higher score wins
   if (Math.abs(a.score - b.score) > 5) {
     return b.score - a.score
   }
 
-  // Rule 2: If within 5 points, prefer higher completeness_score
+  // Secondary: if within 5 points, higher completeness_score wins
   const aCompleteness = a.plan.completeness_score || 0
   const bCompleteness = b.plan.completeness_score || 0
   if (aCompleteness !== bCompleteness) {
     return bCompleteness - aCompleteness
   }
 
-  // Rule 3: If still tied, prefer fewer verification flags
+  // Tertiary: fewer verification flags wins
   return a.verificationFlags.length - b.verificationFlags.length
 }
 
 /**
- * Get recommendations for user preferences
- * Processes all 272 plans, applies filters, scores, and returns top recommendations
- * @param preferences - User preferences from quiz
- * @returns Top 5 recommendations with explanations
+ * Main recommendation engine
+ * Processes all 272 plans and returns top 5 recommendations
  */
 export async function getRecommendationsV3(
   preferences: UserPreferences
@@ -292,18 +271,10 @@ export async function getPlanStatistics() {
     {} as Record<string, number>
   )
 
-  const byTier = plans.reduce(
-    (acc, p) => {
-      acc[p.plan_tier] = (acc[p.plan_tier] || 0) + 1
-      return acc
-    },
-    {} as Record<string, number>
-  )
-
   return {
     totalPlans,
-    avgCompleteness: Math.round(avgCompleteness * 100),
+    avgCompleteness: Math.round(avgCompleteness * 100) / 100,
     byInsurer,
-    byTier,
+    generatedAt: new Date().toISOString(),
   }
 }

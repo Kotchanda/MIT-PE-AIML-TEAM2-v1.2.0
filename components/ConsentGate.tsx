@@ -12,10 +12,10 @@ import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 
 interface ConsentGateProps {
-  onConsent: (consented: boolean) => void
+  onAccept: (consented: boolean) => void
 }
 
-export function ConsentGate({ onConsent }: ConsentGateProps) {
+export function ConsentGate({ onAccept }: ConsentGateProps) {
   const [showDetails, setShowDetails] = useState(false)
   const [hasConsented, setHasConsented] = useState(false)
 
@@ -23,7 +23,8 @@ export function ConsentGate({ onConsent }: ConsentGateProps) {
     setHasConsented(true)
     // Store consent preference in localStorage
     localStorage.setItem('analytics_consent', consent ? 'true' : 'false')
-    onConsent(consent)
+    // Call parent handler with consent decision
+    onAccept(consent)
   }
 
   return (
