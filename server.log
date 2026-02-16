@@ -1253,3 +1253,77 @@ https://nextjs.org/docs/messages/module-not-found
  GET / 200 in 365ms
  GET /favicon.ico 200 in 267ms
  GET / 200 in 1235ms
+ ✓ Compiled in 196ms
+ ⨯ ./components/sections/QuizSection.tsx:318:15
+Parsing ecmascript source code failed
+[0m [90m 316 |[39m         {question[33m.[39mhelper [33m&&[39m (
+ [90m 317 |[39m           [33m<[39m[33mp[39m className[33m=[39m[32m"text-sm text-muted-foreground mb-6"[39m[33m>[39m{question[33m.[39mhelper}[33m<[39m[33m/[39m[33mp[39m[33m>[39m
+[31m[1m>[22m[39m[90m 318 |[39m         )}[33m<[39m[33m/[39m[33mp[39m[33m>[39m
+ [90m     |[39m               [31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 319 |[39m
+ [90m     |[39m [31m[1m^[22m[39m
+[31m[1m>[22m[39m[90m 320 |[39m         {[90m/* Answer options */[39m}
+ [90m     |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 321 |[39m         [33m<[39m[33mdiv[39m className[33m=[39m[32m"space-y-4 mb-8"[39m[33m>[39m
+ [90m 322 |[39m           {question[33m.[39mtype [33m===[39m [32m'radio'[39m [33m?[39m (
+ [90m 323 |[39m             [33m<[39m[33mRadioGroup[39m value[33m=[39m{answers[question[33m.[39mid][33m?[39m[33m.[39mtoString() [33m||[39m [32m''[39m} onValueChange[33m=[39m{handleAnswer}[33m>[39m[0m
+
+Expected '</', got 'jsx text (
+
+        )'
+
+Import traces:
+  Client Component Browser:
+    ./components/sections/QuizSection.tsx [Client Component Browser]
+    ./app/page.tsx [Client Component Browser]
+    ./app/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/sections/QuizSection.tsx [Client Component SSR]
+    ./app/page.tsx [Client Component SSR]
+    ./app/page.tsx [Server Component]
+
+
+ GET / 500 in 247ms
+ GET /favicon.ico 500 in 95ms
+ ✓ Compiled in 157ms
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ✓ Compiled / in 63ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 408ms
+ GET /favicon.ico 200 in 283ms
+   Reload env: .env.local
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 2871ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 314ms
+ GET /favicon.ico 200 in 332ms
+   Reload env: .env
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 155ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 321ms
+ GET /favicon.ico 200 in 292ms
+   Reload env: .env
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 165ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 314ms
+ GET /favicon.ico 200 in 327ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 165ms
+ GET / 200 in 127ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 319ms
+ GET /favicon.ico 200 in 296ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 178ms
+ GET / 200 in 112ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 323ms
+ GET /favicon.ico 200 in 331ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 164ms
+ GET / 200 in 155ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 310ms
+ GET /favicon.ico 200 in 318ms
+ ⚠ metadataBase property in metadata export is not set for resolving social open graph or twitter images, using "http://localhost:3000". See https://nextjs.org/docs/app/api-reference/functions/generate-metadata#metadatabase
+ GET / 200 in 183ms
+ GET / 200 in 123ms
+ GET /favicon.ico?favicon.bf3c9292.ico 200 in 318ms
+ GET /favicon.ico 200 in 317ms

@@ -1,0 +1,159 @@
+// This is your Prisma schema file for Irish Health Insurance Chooser
+// Tracks user sessions, quiz responses, recommendations, and historical statistics
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Session: Represents a complete user journey through the quiz
+model Session {
+  id                    String    @id @default(cuid())
+  
+  // Session metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  completedAt           DateTime?
+  
+  // Quiz responses - stores all 12 answers
+  ageGroup              String?   // e.g., "18-25", "26-35", "36-45", "46-55", "56-65", "65+"
+  budgetRange           String?   // e.g., "under-50", "50-100", "100-150", "150-200", "200+"
+  coverageType          String?   // e.g., "basic", "comprehensive", "premium"
+  hospitalCover         String?   // e.g., "yes", "no", "maybe"
+  consultantChoice      String?   // e.g., "important", "somewhat", "not-important"
+  dentalOptical         String?   // e.g., "both", "dental-only", "optical-only", "none"
+  maternityExtras       String?   // e.g., "yes", "no", "not-applicable"
+  dayToDayBenefits      String?   // e.g., "important", "somewhat", "not-important"
+  menopauseBenefit      String?   // e.g., "yes", "no", "not-applicable"
+  prescriptionCover     String?   // e.g., "important", "somewhat", "not-important"
+  physioRehab           String?   // e.g., "yes", "no", "not-applicable"
+  mentalHealthSupport   String?   // e.g., "yes", "no", "not-applicable"
+  
+  // Recommendation results
+  topRecommendation     String?   // Plan ID of top recommendation
+  topScore              Float?    // Score of top recommendation (0-165)
+  allRecommendations    Json?     // Array of all scored plans with scores and reasoning
+  
+  // Session statistics
+  timeToChoice          Int?      // Time in seconds from start to completion
+  questionsAnswered     Int       @default(0) // Count of answered questions
+  privacyConsented      Boolean   @default(false) // Privacy consent gate
+  
+  // User feedback (optional)
+  userFeedback          String?   // User's feedback on recommendations
+  selectedPlan          String?   // Plan ID that user actually selected
+  
+  // Tracking
+  sessionToken          String    @unique @default(cuid()) // For tracking across pages
+  ipAddress             String?   // For analytics (anonymized)
+  userAgent             String?   // Browser/device info
+  
+  @@index([createdAt])
+  @@index([completedAt])
+  @@index([topRecommendation])
+}
+
+// Plan: Represents a health insurance plan from providers
+model Plan {
+  id                    String    @id @default(cuid())
+  
+  // Basic info
+  name                  String    // e.g., "VHI Health One"
+  provider              String    // e.g., "VHI", "Laya", "Irish Life Health", "Level Health"
+  planType              String    // e.g., "basic", "standard", "comprehensive"
+  
+  // Pricing
+  monthlyPremium        Float     // Monthly cost in EUR
+  annualPremium         Float     // Annual cost in EUR
+  
+  // Coverage details
+  hospitalCover         Boolean   @default(false)
+  consultantChoice      Boolean   @default(false)
+  dentalCover           Boolean   @default(false)
+  opticalCover          Boolean   @default(false)
+  maternityExtras       Boolean   @default(false)
+  dayToDayBenefits      Boolean   @default(false)
+  menopauseBenefit      Boolean   @default(false)
+  prescriptionCover     Boolean   @default(false)
+  physioRehab           Boolean   @default(false)
+  mentalHealthSupport   Boolean   @default(false)
+  
+  // Cost details
+  gpVisitCost           Float?    // Cost per GP visit (NULL if covered)
+  hospitalDeductible    Float?    // Hospital deductible amount
+  dentalCoveragePercent Float?    // Percentage of dental costs covered
+  opticalCoveragePercent Float?   // Percentage of optical costs covered
+  
+  // Additional info
+  description           String?   // Plan description
+  keyFeatures           Json?     // Array of key features
+  exclusions            Json?     // Array of exclusions
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  isActive              Boolean   @default(true)
+  
+  @@index([provider])
+  @@index([planType])
+  @@index([monthlyPremium])
+}
+
+// Statistics: Aggregated data for analytics
+model Statistics {
+  id                    String    @id @default(cuid())
+  
+  // Time period
+  date                  DateTime  @default(now())
+  
+  // Session counts
+  totalSessions         Int       @default(0)
+  completedSessions     Int       @default(0)
+  abandonedSessions     Int       @default(0)
+  
+  // Average metrics
+  avgTimeToChoice       Float?    // Average time in seconds
+  avgQuestionsAnswered  Float?    // Average questions answered before completion
+  
+  // Popular choices
+  mostSelectedPlan      String?   // Plan ID most frequently selected
+  mostSelectedProvider  String?   // Provider most frequently selected
+  
+  // Demographics (aggregated)
+  topAgeGroup           String?   // Most common age group
+  topBudgetRange        String?   // Most common budget range
+  
+  // Recommendation patterns
+  avgTopScore           Float?    // Average score of top recommendations
+  recommendationAccuracy Float?   // Percentage of users who selected top recommendation
+  
+  // Metadata
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  @@index([date])
+}
+
+// SessionPlan: Junction table for tracking which plans were recommended in each session
+model SessionPlan {
+  id                    String    @id @default(cuid())
+  
+  sessionId             String
+  planId                String
+  
+  // Scoring details
+  score                 Float     // Final score for this plan in this session
+  scoreBreakdown        Json?     // Detailed breakdown of how score was calculated
+  rank                  Int       // Rank among all plans (1 = top recommendation)
+  
+  createdAt             DateTime  @default(now())
+  
+  @@unique([sessionId, planId])
+  @@index([sessionId])
+  @@index([planId])
+  @@index([score])
+}
