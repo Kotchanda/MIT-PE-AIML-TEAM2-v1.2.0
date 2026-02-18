@@ -7,7 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { execute, queryOne } from '@/lib/db'
+import { v4 as uuidv4 } from 'uuid'
 
 /**
  * POST /api/sessions
@@ -21,28 +22,29 @@ export async function POST(request: NextRequest) {
     const userAgent = request.headers.get('user-agent') || undefined
     const ipAddress = request.headers.get('x-forwarded-for')?.split(',')[0] || undefined
 
-    // Create new session in database
-    const session = await prisma.session.create({
-      data: {
-        userAgent,
-        ipAddress,
-        privacyConsented: false, // Will be updated after privacy gate
-        questionsAnswered: 0,
-      },
-    })
+    // Create new session in database using raw SQL
+    const sessionId = uuidv4()
+    const sessionToken = uuidv4()
+    
+    await execute(
+      `INSERT INTO "Session" 
+       ("id", "sessionToken", "userAgent", "ipAddress", "privacyConsented", "questionsAnswered", "createdAt", "updatedAt")
+       VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
+      [sessionId, sessionToken, userAgent, ipAddress, false, 0]
+    )
 
     return NextResponse.json(
       {
-        id: session.id,
-        sessionToken: session.sessionToken,
-        createdAt: session.createdAt,
+        id: sessionId,
+        sessionToken: sessionToken,
+        createdAt: new Date().toISOString(),
       },
       { status: 201 }
     )
   } catch (error) {
     console.error('Error creating session:', error)
     return NextResponse.json(
-      { error: 'Failed to create session' },
+      { error: 'Failed to create session', details: String(error) },
       { status: 500 }
     )
   }
@@ -69,10 +71,11 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Retrieve session from database
-    const session = await prisma.session.findUnique({
-      where: { id: sessionId },
-    })
+    // Retrieve session from database using raw SQL
+    const session = await queryOne(
+      `SELECT * FROM "Session" WHERE "id" = $1`,
+      [sessionId]
+    )
 
     if (!session) {
       return NextResponse.json(
@@ -85,7 +88,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error retrieving session:', error)
     return NextResponse.json(
-      { error: 'Failed to retrieve session' },
+      { error: 'Failed to retrieve session', details: String(error) },
       { status: 500 }
     )
   }

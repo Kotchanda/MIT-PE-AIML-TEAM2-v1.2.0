@@ -256,16 +256,66 @@ export async function getRecommendationsV3(
  * Get plan statistics for post-session panel
  * @returns Statistics about the plan dataset
  */
+/**
+ * Calculate data completeness score for a plan
+ * Based on how many key fields are populated (not null/undefined)
+ * This gives a more realistic view of data quality
+ */
+function calculatePlanCompleteness(plan: any): number {
+  // Key fields that define a complete plan record
+  const keyFields = [
+    'hospital_cover',
+    'outpatient_cover',
+    'gp_visits',
+    'dental_cover',
+    'optical_cover',
+    'maternity_cover',
+    'mental_health',
+    'overseas_emergency',
+    'plan_tier',
+    'plan_name',
+    'insurer',
+  ]
+
+  // Count how many key fields are populated (not null/undefined/empty)
+  const filledFields = keyFields.filter(
+    (field) => plan[field] !== null && plan[field] !== undefined && plan[field] !== ''
+  ).length
+
+  // Return percentage of filled fields (0-100)
+  // This gives a more realistic completeness score
+  return (filledFields / keyFields.length) * 100
+}
+
+/**
+ * Get plan statistics for post-session panel
+ * Calculates comprehensive metrics about the plan dataset
+ * @returns Statistics about the plan dataset including completeness, distribution by insurer/tier
+ */
 export async function getPlanStatistics() {
   const plans = await getPlans()
 
   const totalPlans = plans.length
+  
+  // Calculate average completeness based on actual data fields
+  // This is more meaningful than relying on a single completeness_score field
   const avgCompleteness =
-    plans.reduce((sum, p) => sum + (p.completeness_score || 0), 0) / totalPlans
+    plans.reduce((sum, p) => sum + calculatePlanCompleteness(p), 0) / totalPlans
 
+  // Group plans by insurer
   const byInsurer = plans.reduce(
     (acc, p) => {
       acc[p.insurer] = (acc[p.insurer] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
+  // Calculate plans by tier (BASIC, MID, HIGH, PREMIUM)
+  const byTier = plans.reduce(
+    (acc, p) => {
+      const tier = p.plan_tier || 'UNKNOWN'
+      acc[tier] = (acc[tier] || 0) + 1
       return acc
     },
     {} as Record<string, number>
@@ -275,6 +325,8 @@ export async function getPlanStatistics() {
     totalPlans,
     avgCompleteness: Math.round(avgCompleteness * 100) / 100,
     byInsurer,
+    byTier,
+    insurerCount: Object.keys(byInsurer).length,
     generatedAt: new Date().toISOString(),
   }
 }

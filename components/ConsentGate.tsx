@@ -24,7 +24,7 @@ export function ConsentGate({ onAccept }: ConsentGateProps) {
     // Store consent preference in localStorage
     localStorage.setItem('analytics_consent', consent ? 'true' : 'false')
     // Call parent handler with consent decision
-    onAccept(consent)
+    onAccept()
   }
 
   return (

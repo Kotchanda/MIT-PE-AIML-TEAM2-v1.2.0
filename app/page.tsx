@@ -2,6 +2,15 @@
  * Home Page - Irish Health Insurance Chooser v3.0
  * Full MIT-PE-AIML-TEAM2 v1.2.0 blueprint implementation
  * Processes 272 insurance plans with NULL-safe scoring
+ * 
+ * Page Flow:
+ * 1. consent → quiz → results → stats
+ * 
+ * State Management:
+ * - pageState: Controls which component is rendered
+ * - results: Top 5 recommendations from engine v3
+ * - stats: Post-session statistics
+ * - loading/error: Blueprint data loading state
  */
 
 'use client'
@@ -33,16 +42,17 @@ export default function Home() {
   /**
    * Load all blueprint data on component mount
    * This pre-loads the 272 plans, question bank, scoring spec, etc.
+   * Only runs once due to empty dependency array
    */
   useEffect(() => {
     const initializeBlueprint = async () => {
       try {
-        console.log('🚀 Initializing MIT-PE-AIML-TEAM2 v1.2.0 blueprint...')
+        console.log('[Home] 🚀 Initializing MIT-PE-AIML-TEAM2 v1.2.0 blueprint...')
         await loadAllBlueprintData()
-        console.log('✅ Blueprint data loaded successfully')
+        console.log('[Home] ✅ Blueprint data loaded successfully')
         setLoading(false)
       } catch (err) {
-        console.error('❌ Error loading blueprint data:', err)
+        console.error('[Home] ❌ Error loading blueprint data:', err)
         setError(
           err instanceof Error
             ? err.message
@@ -57,23 +67,28 @@ export default function Home() {
 
   /**
    * Handle consent acceptance
-   * User must accept privacy/consent gate before proceeding
+   * User must accept privacy/consent gate before proceeding to quiz
    */
   const handleConsentAccept = () => {
-    console.log('✅ User accepted consent gate')
+    console.log('[Home] ✅ User accepted consent gate')
+    console.log('[Home] Transitioning: consent → quiz')
     setPageState('quiz')
   }
 
   /**
    * Handle quiz completion
-   * Called when user submits quiz answers
-   * Receives top 5 recommendations from engine v3
+   * Called when QuizSection's onComplete callback is invoked after user submits final question
+   * Receives top 5 recommendations from recommendation engine v3
    */
   const handleQuizComplete = (quizResults: ComparisonResult[], quizStats: any) => {
-    console.log('🎉 Quiz completed, showing results')
+    console.log('[Home] 🎉 QUIZ COMPLETED - handleQuizComplete callback received')
+    console.log('[Home] Received results:', quizResults.length, 'plans')
+    console.log('[Home] Received stats:', quizStats)
+    console.log('[Home] Transitioning: quiz → results')
     setResults(quizResults)
     setStats(quizStats)
     setPageState('results')
+    console.log('[Home] Page state changed to "results"')
   }
 
   /**
@@ -81,7 +96,8 @@ export default function Home() {
    * User has reviewed recommendations, show post-session stats
    */
   const handleResultsComplete = () => {
-    console.log('📊 Showing post-session statistics')
+    console.log('[Home] 📊 Results reviewed by user')
+    console.log('[Home] Transitioning: results → stats')
     setPageState('stats')
   }
 
@@ -90,7 +106,8 @@ export default function Home() {
    * Reset to quiz state to allow user to try again
    */
   const handleRestart = () => {
-    console.log('🔄 Restarting quiz')
+    console.log('[Home] 🔄 User clicked restart')
+    console.log('[Home] Resetting state and transitioning: * → quiz')
     setResults([])
     setStats(null)
     setPageState('quiz')

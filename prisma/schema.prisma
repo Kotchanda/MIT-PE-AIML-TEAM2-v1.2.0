@@ -3,7 +3,7 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -19,141 +19,162 @@ model Session {
   updatedAt             DateTime  @updatedAt
   completedAt           DateTime?
   
-  // Quiz responses - stores all 12 answers
-  ageGroup              String?   // e.g., "18-25", "26-35", "36-45", "46-55", "56-65", "65+"
-  budgetRange           String?   // e.g., "under-50", "50-100", "100-150", "150-200", "200+"
-  coverageType          String?   // e.g., "basic", "comprehensive", "premium"
-  hospitalCover         String?   // e.g., "yes", "no", "maybe"
-  consultantChoice      String?   // e.g., "important", "somewhat", "not-important"
-  dentalOptical         String?   // e.g., "both", "dental-only", "optical-only", "none"
-  maternityExtras       String?   // e.g., "yes", "no", "not-applicable"
-  dayToDayBenefits      String?   // e.g., "important", "somewhat", "not-important"
-  menopauseBenefit      String?   // e.g., "yes", "no", "not-applicable"
-  prescriptionCover     String?   // e.g., "important", "somewhat", "not-important"
-  physioRehab           String?   // e.g., "yes", "no", "not-applicable"
-  mentalHealthSupport   String?   // e.g., "yes", "no", "not-applicable"
+  // User responses to quiz questions
+  responses             SessionResponse[]
   
-  // Recommendation results
-  topRecommendation     String?   // Plan ID of top recommendation
-  topScore              Float?    // Score of top recommendation (0-165)
-  allRecommendations    Json?     // Array of all scored plans with scores and reasoning
+  // Recommended plans for this session
+  recommendedPlans      SessionPlan[]
   
-  // Session statistics
-  timeToChoice          Int?      // Time in seconds from start to completion
-  questionsAnswered     Int       @default(0) // Count of answered questions
-  privacyConsented      Boolean   @default(false) // Privacy consent gate
-  
-  // User feedback (optional)
-  userFeedback          String?   // User's feedback on recommendations
-  selectedPlan          String?   // Plan ID that user actually selected
-  
-  // Tracking
-  sessionToken          String    @unique @default(cuid()) // For tracking across pages
-  ipAddress             String?   // For analytics (anonymized)
-  userAgent             String?   // Browser/device info
-  
-  @@index([createdAt])
-  @@index([completedAt])
-  @@index([topRecommendation])
+  // Statistics tracking
+  statistics            Statistics?
 }
 
-// Plan: Represents a health insurance plan from providers
-model Plan {
-  id                    String    @id @default(cuid())
+// Individual quiz response
+model SessionResponse {
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   
-  // Basic info
-  name                  String    // e.g., "VHI Health One"
-  provider              String    // e.g., "VHI", "Laya", "Irish Life Health", "Level Health"
-  planType              String    // e.g., "basic", "standard", "comprehensive"
+  questionId  String
+  answer      String   // User's answer to the question
+  
+  createdAt   DateTime @default(now())
+  
+  @@index([sessionId])
+}
+
+// Plan: Represents a health insurance plan
+model Plan {
+  id                String   @id @default(cuid())
+  
+  // Basic plan information
+  name              String
+  provider          String
+  description       String?
   
   // Pricing
-  monthlyPremium        Float     // Monthly cost in EUR
-  annualPremium         Float     // Annual cost in EUR
+  monthlyPremium    Decimal  @db.Decimal(10, 2)
+  annualPremium     Decimal  @db.Decimal(10, 2)
   
   // Coverage details
-  hospitalCover         Boolean   @default(false)
-  consultantChoice      Boolean   @default(false)
-  dentalCover           Boolean   @default(false)
-  opticalCover          Boolean   @default(false)
-  maternityExtras       Boolean   @default(false)
-  dayToDayBenefits      Boolean   @default(false)
-  menopauseBenefit      Boolean   @default(false)
-  prescriptionCover     Boolean   @default(false)
-  physioRehab           Boolean   @default(false)
-  mentalHealthSupport   Boolean   @default(false)
+  coverageDetails   String?  // JSON string of coverage details
   
-  // Cost details
-  gpVisitCost           Float?    // Cost per GP visit (NULL if covered)
-  hospitalDeductible    Float?    // Hospital deductible amount
-  dentalCoveragePercent Float?    // Percentage of dental costs covered
-  opticalCoveragePercent Float?   // Percentage of optical costs covered
+  // Plan metadata
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
   
-  // Additional info
-  description           String?   // Plan description
-  keyFeatures           Json?     // Array of key features
-  exclusions            Json?     // Array of exclusions
-  
-  // Metadata
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  isActive              Boolean   @default(true)
-  
-  @@index([provider])
-  @@index([planType])
-  @@index([monthlyPremium])
+  // Relations
+  sessionPlans      SessionPlan[]
 }
 
-// Statistics: Aggregated data for analytics
-model Statistics {
-  id                    String    @id @default(cuid())
-  
-  // Time period
-  date                  DateTime  @default(now())
-  
-  // Session counts
-  totalSessions         Int       @default(0)
-  completedSessions     Int       @default(0)
-  abandonedSessions     Int       @default(0)
-  
-  // Average metrics
-  avgTimeToChoice       Float?    // Average time in seconds
-  avgQuestionsAnswered  Float?    // Average questions answered before completion
-  
-  // Popular choices
-  mostSelectedPlan      String?   // Plan ID most frequently selected
-  mostSelectedProvider  String?   // Provider most frequently selected
-  
-  // Demographics (aggregated)
-  topAgeGroup           String?   // Most common age group
-  topBudgetRange        String?   // Most common budget range
-  
-  // Recommendation patterns
-  avgTopScore           Float?    // Average score of top recommendations
-  recommendationAccuracy Float?   // Percentage of users who selected top recommendation
-  
-  // Metadata
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  @@index([date])
-}
-
-// SessionPlan: Junction table for tracking which plans were recommended in each session
+// SessionPlan: Represents a recommended plan for a session
 model SessionPlan {
-  id                    String    @id @default(cuid())
+  id          String   @id @default(cuid())
+  sessionId   String
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   
-  sessionId             String
-  planId                String
+  planId      String
+  plan        Plan     @relation(fields: [planId], references: [id])
   
-  // Scoring details
-  score                 Float     // Final score for this plan in this session
-  scoreBreakdown        Json?     // Detailed breakdown of how score was calculated
-  rank                  Int       // Rank among all plans (1 = top recommendation)
+  // Recommendation score
+  score       Int      // 0-100 match percentage
   
-  createdAt             DateTime  @default(now())
+  createdAt   DateTime @default(now())
   
-  @@unique([sessionId, planId])
   @@index([sessionId])
   @@index([planId])
-  @@index([score])
+}
+
+// Statistics: Aggregated statistics for a session
+model Statistics {
+  id          String   @id @default(cuid())
+  sessionId   String   @unique
+  session     Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Quiz completion metrics
+  questionsAnswered Int
+  totalQuestions    Int
+  completionRate    Decimal @db.Decimal(5, 2)
+  
+  // Recommendation metrics
+  topPlanScore      Int
+  averageScore      Decimal @db.Decimal(5, 2)
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+// QuestionStatistics: Tracks statistical properties of each question
+model QuestionStatistics {
+  id                    String   @id @default(cuid())
+  
+  // Question metadata
+  questionId            String   @unique
+  questionText          String
+  category              String   // e.g., "coverage", "price", "provider"
+  
+  // Statistical properties
+  discriminativePower   Decimal  @db.Decimal(5, 3) @default(0.5)  // 0-1 scale
+  responseDistribution  String?  // JSON: { "answer1": count, "answer2": count, ... }
+  
+  // Usage tracking
+  totalResponses        Int      @default(0)
+  lastUpdated           DateTime @updatedAt
+  
+  createdAt             DateTime @default(now())
+}
+
+// QuestionResponseAnalytics: Detailed analytics for question responses
+model QuestionResponseAnalytics {
+  id                String   @id @default(cuid())
+  
+  questionId        String
+  answer            String
+  
+  // Analytics
+  responseCount     Int      @default(0)
+  planMatchRate     Decimal  @db.Decimal(5, 3)  // How often this answer leads to plan matches
+  
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@unique([questionId, answer])
+}
+
+// AdaptiveQuizSession: Tracks adaptive quiz sessions with ranking
+model AdaptiveQuizSession {
+  id                    String   @id @default(cuid())
+  
+  // Session metadata
+  userId                String?  // Optional user ID if authentication is added
+  startedAt             DateTime @default(now())
+  completedAt           DateTime?
+  
+  // Quiz progress
+  currentQuestionIndex  Int      @default(0)
+  totalQuestionsToAsk   Int      @default(10)  // Adaptive: can vary
+  
+  // Responses in this session
+  responses             String?  // JSON: { "questionId": "answer", ... }
+  
+  // Ranking state
+  questionRankingCache  QuestionRankingCache?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+// QuestionRankingCache: Caches ranked questions for adaptive quiz
+model QuestionRankingCache {
+  id                    String   @id @default(cuid())
+  
+  sessionId             String   @unique
+  session               AdaptiveQuizSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  // Ranked questions (JSON array of question IDs in order)
+  rankedQuestionIds     String   // JSON: ["q1", "q2", "q3", ...]
+  
+  // Cache metadata
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 }

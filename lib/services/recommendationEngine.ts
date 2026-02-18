@@ -11,8 +11,26 @@
  * Total possible score: 165 points
  */
 
-import { prisma } from '@/lib/db'
-import type { Session, Plan } from '@/lib/generated/prisma'
+import { queryAll, queryOne } from '@/lib/db'
+
+// Type definitions (replacing Prisma types)
+interface Plan {
+  id: string
+  name: string
+  provider: string
+  monthlyPremium: number
+  isActive: boolean
+  hospitalCover: boolean
+  consultantChoice: boolean
+  dentalCover: boolean
+  opticalCover: boolean
+  maternityExtras: boolean
+  dayToDayBenefits: boolean
+  menopauseBenefit: boolean
+  prescriptionCover: boolean
+  physioRehab: boolean
+  mentalHealthSupport: boolean
+}
 
 interface ScoringBreakdown {
   category: string
@@ -63,10 +81,10 @@ export async function generateRecommendations(
   }
 ): Promise<RecommendationResult> {
   try {
-    // Fetch all active plans from database
-    const plans = await prisma.plan.findMany({
-      where: { isActive: true },
-    })
+    // Fetch all active plans from database using raw SQL
+    const plans = await queryAll<Plan>(
+      'SELECT * FROM "Plan" WHERE "isActive" = true'
+    )
 
     const scoringNotes: string[] = []
 
@@ -303,18 +321,14 @@ export async function generateRecommendations(
     // Sort by score (descending), then apply tie-breaker logic
     const sortedPlans = applyTieBreakerLogic(scoredPlans)
 
-    // Store recommendations in database
+    // Store recommendations in database using raw SQL
     for (let i = 0; i < sortedPlans.length; i++) {
       const plan = sortedPlans[i]
-      await prisma.sessionPlan.create({
-        data: {
-          sessionId,
-          planId: plan.planId,
-          score: plan.totalScore,
-          scoreBreakdown: plan.scoreBreakdown,
-          rank: i + 1,
-        },
-      })
+      await query(
+        `INSERT INTO "SessionPlan" ("sessionId", "planId", "score", "scoreBreakdown", "rank", "createdAt")
+         VALUES ($1, $2, $3, $4, $5, NOW())`,
+        [sessionId, plan.planId, plan.totalScore, JSON.stringify(plan.scoreBreakdown), i + 1]
+      )
     }
 
     // Add scoring notes
@@ -460,3 +474,6 @@ function scoreMentalHealthSupport(preference: string, planHasCover: boolean): nu
   if (preference === 'not-applicable') return 10 // Any plan is fine
   return 0
 }
+
+// Import query function from db module
+import { query } from '@/lib/db'
