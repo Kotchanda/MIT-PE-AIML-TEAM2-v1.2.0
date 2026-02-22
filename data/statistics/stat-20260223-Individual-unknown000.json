@@ -1,0 +1,18 @@
+{
+  "session_id": "",
+  "timestamp": "2026-02-23",
+  "agent_version": "v1.2.0",
+  "consent_type": "full",
+  "cover_type_category": "Individual",
+  "age_bracket": "45-54",
+  "region_category": "Dublin",
+  "budget_bracket": "100-150",
+  "health_complexity_score": "high",
+  "completion_status": "complete",
+  "questions_answered": 30,
+  "total_questions": 30,
+  "completion_percentage": 100,
+  "recommendation_tier": "mid-range",
+  "provider_recommended": "Mixed",
+  "data_protection_notice": "No personal data stored. Anonymised statistics only. GDPR Article 89 research exemption."
+}
