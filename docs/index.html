@@ -1,530 +1,93 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Irish Health Insurance Advisor (GDPR Ephemeral) — Public GUI</title>
-  <meta name="description" content="Decision-support GUI for Irish health insurance. GDPR-compliant, no-storage model, optional health questions with explicit consent." />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛡️ Irish Health Insurance Advisor</title>
   <style>
-    :root{
-      --bg:#0b1220;
-      --panel:#111a2e;
-      --muted:#97a3b7;
-      --text:#e8eefc;
-      --accent:#6aa9ff;
-      --ok:#3ddc97;
-      --warn:#ffcc66;
-      --bad:#ff6b6b;
-      --line:rgba(255,255,255,.10);
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-      --radius:14px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a4a2e 0%, #0d2b1a 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 40px 20px 120px;
+      color: #fff;
     }
-    *{box-sizing:border-box}
-    body{margin:0; background:radial-gradient(1200px 600px at 20% 0%, rgba(106,169,255,.20), transparent 60%), var(--bg);
-      color:var(--text); font-family:var(--font); line-height:1.45;}
-    a{color:var(--accent); text-decoration:none}
-    a:hover{text-decoration:underline}
-    header{padding:28px 18px 12px; max-width:1040px; margin:0 auto;}
-    h1{margin:0 0 6px; font-size:22px; letter-spacing:.2px}
-    header p{margin:0; color:var(--muted)}
-    .wrap{max-width:1040px; margin:0 auto; padding:0 18px 40px;}
-    .grid{display:grid; grid-template-columns: 1.25fr .75fr; gap:16px; align-items:start}
-    @media (max-width: 900px){.grid{grid-template-columns:1fr}}
-
-    .card{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)); border:1px solid var(--line);
-      border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden}
-    .card .hd{padding:14px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; gap:10px; align-items:center}
-    .card .hd strong{font-weight:650}
-    .card .bd{padding:16px}
-    .pill{font-size:12px; color:var(--muted); border:1px solid var(--line); padding:4px 10px; border-radius:999px}
-
-    .notice{padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:rgba(0,0,0,.18)}
-    .notice.ok{border-color:rgba(61,220,151,.35); background:rgba(61,220,151,.08)}
-    .notice.warn{border-color:rgba(255,204,102,.35); background:rgba(255,204,102,.08)}
-    .notice.bad{border-color:rgba(255,107,107,.35); background:rgba(255,107,107,.08)}
-    .notice p{margin:0; color:var(--muted)}
-    .notice strong{color:var(--text)}
-
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:12px}
-    @media (max-width: 600px){.row{grid-template-columns:1fr}}
-
-    label{display:block; font-size:13px; color:var(--muted); margin:0 0 6px}
-    input, select, textarea{width:100%; padding:10px 11px; border-radius:12px; border:1px solid var(--line);
-      background:rgba(0,0,0,.18); color:var(--text); outline:none}
-    input:focus, select:focus, textarea:focus{border-color:rgba(106,169,255,.6); box-shadow:0 0 0 3px rgba(106,169,255,.18)}
-
-    .btns{display:flex; flex-wrap:wrap; gap:10px; margin-top:12px}
-    button{border:1px solid var(--line); background:rgba(255,255,255,.06); color:var(--text);
-      padding:10px 12px; border-radius:12px; cursor:pointer; font-weight:600}
-    button.primary{background:linear-gradient(180deg, rgba(106,169,255,.30), rgba(106,169,255,.14)); border-color:rgba(106,169,255,.5)}
-    button.danger{background:linear-gradient(180deg, rgba(255,107,107,.22), rgba(255,107,107,.10)); border-color:rgba(255,107,107,.45)}
-    button:disabled{opacity:.55; cursor:not-allowed}
-
-    .steps{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 0}
-    .step{font-size:12px; color:var(--muted); border:1px solid var(--line); padding:4px 8px; border-radius:999px}
-    .step.on{color:var(--text); border-color:rgba(106,169,255,.45); background:rgba(106,169,255,.10)}
-
-    .k{font-size:12px; color:var(--muted)}
-    footer{max-width:1040px; margin:0 auto; padding:18px; color:var(--muted)}
-    code{background:rgba(0,0,0,.25); padding:1px 6px; border-radius:8px; border:1px solid var(--line)}
+    .badge {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(8px);
+    }
+    h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; margin-bottom: 12px; text-align: center; }
+    .subtitle {
+      font-size: clamp(14px, 2vw, 18px);
+      opacity: 0.85;
+      text-align: center;
+      max-width: 560px;
+      line-height: 1.5;
+      margin-bottom: 40px;
+    }
+    .features {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 40px;
+      max-width: 700px;
+    }
+    .feature {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 12px 18px;
+      font-size: 13px;
+      backdrop-filter: blur(6px);
+    }
+    footer {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(8px);
+      text-align: center;
+      padding: 10px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+    footer a { color: #7dd3a8; text-decoration: none; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🛡️ Irish Health Insurance Advisor (GDPR Ephemeral) — Public GUI</h1>
-    <p>Decision-support only. No account. No storage. Official comparisons: <a href="https://www.hia.ie" target="_blank" rel="noopener">hia.ie</a>.</p>
-  </header>
-
-  <div class="wrap">
-    <div class="grid">
-      <section class="card" id="mainCard">
-        <div class="hd">
-          <strong id="cardTitle">Privacy Notice & Consent</strong>
-          <span class="pill" id="version">v1.2.0</span>
-        </div>
-        <div class="bd">
-          <div class="steps" aria-label="Steps">
-            <span class="step on" data-step-ind="0">1. Consent</span>
-            <span class="step" data-step-ind="1">2. Your Needs</span>
-            <span class="step" data-step-ind="2">3. Optional Health</span>
-            <span class="step" data-step-ind="3">4. Result</span>
-          </div>
-
-          <div id="step0">
-            <div class="notice">
-              <p><strong>GDPR privacy notice (no-storage model):</strong> This page runs fully in your browser. We do not send your answers anywhere and we do not store personal data. Optional health questions are only shown if you give explicit consent (GDPR Art. 9).</p>
-            </div>
-            <div style="height:10px"></div>
-            <div class="notice warn">
-              <p><strong>You can withdraw consent any time</strong> by pressing <code>Withdraw consent</code> — your on-page answers will be cleared.</p>
-            </div>
-
-            <div class="btns">
-              <button class="primary" id="btnFull">I agree — start the quiz</button>
-              <button id="btnNoHealth">I agree — no health data</button>
-              <button class="danger" id="btnExit">I do not agree</button>
-            </div>
-
-            <p class="k" style="margin-top:12px">Tip: If you are <strong>25+</strong> and do not currently hold private health insurance, you may be affected by <strong>Lifetime Community Rating</strong> loading when you take out cover later.</p>
-          </div>
-
-          <form id="step1" hidden>
-            <div class="notice ok">
-              <p><strong>Non-health path</strong> is always available. You can skip any question.</p>
-            </div>
-            <div style="height:12px"></div>
-
-            <div class="row">
-              <div>
-                <label for="county">County (for typical hospital networks)</label>
-                <select id="county" required>
-                  <option value="">Select…</option>
-                  <option>Dublin</option><option>Cork</option><option>Galway</option><option>Limerick</option><option>Waterford</option>
-                  <option>Wexford</option><option>Kildare</option><option>Meath</option><option>Wicklow</option>
-                  <option>Other</option>
-                </select>
-              </div>
-              <div>
-                <label for="coverType">Cover type</label>
-                <select id="coverType" required>
-                  <option value="">Select…</option>
-                  <option value="publicPlus">Public hospital cover + day-to-day extras</option>
-                  <option value="semiPrivate">Some private/semi-private access</option>
-                  <option value="private">Private hospital access focus</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:12px">
-              <div>
-                <label for="budget">Monthly budget (€)</label>
-                <select id="budget" required>
-                  <option value="">Select…</option>
-                  <option value="<100">&lt; 100</option>
-                  <option value="100-150">100–150</option>
-                  <option value="150-220">150–220</option>
-                  <option value="220-300">220–300</option>
-                  <option value=">300">&gt; 300</option>
-                </select>
-              </div>
-              <div>
-                <label for="lifeStage">Who needs cover?</label>
-                <select id="lifeStage" required>
-                  <option value="">Select…</option>
-                  <option value="single">Single adult</option>
-                  <option value="couple">Couple</option>
-                  <option value="family">Family (adult(s) + children)</option>
-                  <option value="student">Student/young adult</option>
-                  <option value="retired">Older adult/retired</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="row" style="margin-top:12px">
-              <div>
-                <label for="waitingTolerance">How urgent is access to consultants/tests?</label>
-                <select id="waitingTolerance">
-                  <option value="any">Not urgent</option>
-                  <option value="some">Somewhat important</option>
-                  <option value="high">Very important</option>
-                </select>
-              </div>
-              <div>
-                <label for="excess">Are you okay with an excess/co-payment to reduce premium?</label>
-                <select id="excess">
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
-                  <option value="unsure">Not sure</option>
-                </select>
-              </div>
-            </div>
-
-            <div style="margin-top:12px">
-              <label for="notes">Anything else (optional, avoid personal identifiers)</label>
-              <textarea id="notes" rows="3" placeholder="Example: prefer local hospital; want good outpatient benefits; avoid high excess."></textarea>
-              <p class="k">Please don’t enter names, emails, phone numbers, or detailed medical information.</p>
-            </div>
-
-            <div class="btns">
-              <button type="button" id="btnBack1">Back</button>
-              <button type="button" class="primary" id="btnNext1">Continue</button>
-              <button type="button" class="danger" id="btnWithdraw1">Withdraw consent</button>
-            </div>
-          </form>
-
-          <form id="step2" hidden>
-            <div class="notice" id="healthGateMsg"></div>
-            <div style="height:12px"></div>
-
-            <div id="healthBlock" hidden>
-              <div class="notice warn">
-                <p><strong>Special-category health data:</strong> These questions are optional. Answers remain on this page only. You may skip all.</p>
-              </div>
-              <div style="height:12px"></div>
-
-              <div class="row">
-                <div>
-                  <label for="chronic">Any ongoing/chronic condition that may require frequent outpatient care?</label>
-                  <select id="chronic">
-                    <option value="skip">Prefer not to say</option>
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="maternity">Maternity planning in the next 12 months?</label>
-                  <select id="maternity">
-                    <option value="skip">Prefer not to say</option>
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row" style="margin-top:12px">
-                <div>
-                  <label for="mentalHealth">Would mental health benefits be important?</label>
-                  <select id="mentalHealth">
-                    <option value="skip">Prefer not to say</option>
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </div>
-                <div>
-                  <label for="dentalOptical">Would dental/optical benefits be important?</label>
-                  <select id="dentalOptical">
-                    <option value="skip">Prefer not to say</option>
-                    <option value="no">No</option>
-                    <option value="yes">Yes</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style="margin-top:12px">
-                <label for="healthNotes">Optional health notes (keep it high-level; no diagnoses/meds)</label>
-                <textarea id="healthNotes" rows="3" placeholder="Example: expect frequent physio/outpatient visits; want strong MRI cover."></textarea>
-                <p class="k">Avoid detailed medical information; keep it general.</p>
-              </div>
-            </div>
-
-            <div class="btns">
-              <button type="button" id="btnBack2">Back</button>
-              <button type="button" class="primary" id="btnNext2">See recommendation</button>
-              <button type="button" class="danger" id="btnWithdraw2">Withdraw consent</button>
-            </div>
-          </form>
-
-          <div id="step3" hidden>
-            <div class="notice ok">
-              <p><strong>Result generated.</strong> This is guidance only; always verify benefits, waiting periods, and hospital lists on insurer documentation and compare plans via <a href="https://www.hia.ie" target="_blank" rel="noopener">hia.ie</a>.</p>
-            </div>
-
-            <div style="height:12px"></div>
-            <div class="card" style="box-shadow:none">
-              <div class="hd"><strong>Recommended tier</strong><span class="pill" id="tierPill">—</span></div>
-              <div class="bd">
-                <div id="resultText" style="white-space:pre-wrap"></div>
-                <div style="height:10px"></div>
-                <div class="notice warn">
-                  <p><strong>Lifetime Community Rating (LCR):</strong> If you are 25+ and not currently insured, you may pay a loading when you purchase cover later. Check the latest guidance on <a href="https://www.hia.ie/consumer-information/lifetime-community-rating" target="_blank" rel="noopener">hia.ie</a>.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="btns">
-              <button id="btnBack3">Back</button>
-              <button class="primary" id="btnRestart">Restart</button>
-              <button class="danger" id="btnWithdraw3">Withdraw consent</button>
-            </div>
-          </div>
-
-          <div id="exit" hidden>
-            <div class="notice bad">
-              <p><strong>Exited.</strong> No information has been processed beyond this page. You can close this tab.</p>
-            </div>
-            <div class="btns">
-              <button class="primary" id="btnReturn">Return</button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      <aside class="card">
-        <div class="hd">
-          <strong>How this GUI works</strong>
-          <span class="pill">Client-only</span>
-        </div>
-        <div class="bd">
-          <div class="notice">
-            <p><strong>No storage:</strong> This is a static page. Answers are kept in-memory in your browser and cleared if you refresh or withdraw consent.</p>
-          </div>
-          <div style="height:10px"></div>
-          <div class="notice">
-            <p><strong>No PII:</strong> Please do not enter names, emails, phone numbers, addresses, or detailed medical information.</p>
-          </div>
-          <div style="height:10px"></div>
-          <div class="notice">
-            <p><strong>Official resource:</strong> Use the Health Insurance Authority plan comparison tool: <a href="https://www.hia.ie" target="_blank" rel="noopener">hia.ie</a>.</p>
-          </div>
-          <div style="height:14px"></div>
-
-          <p class="k" style="margin:0 0 8px"><strong>Implementation note (for repo maintainers)</strong></p>
-          <p class="k" style="margin:0">This file is intended for GitHub Pages via <code>/docs</code>. Enable Pages: Settings → Pages → Deploy from a branch → <code>main</code> / <code>/docs</code>.</p>
-        </div>
-      </aside>
-    </div>
+  <div class="badge">🔒 GDPR Compliant · Irish DPC</div>
+  <h1>🛡️ Irish Health Insurance Advisor</h1>
+  <p class="subtitle">Get personalised health insurance recommendations in minutes. Your data is never stored.</p>
+  <div class="features">
+    <div class="feature">✅ 30-question adaptive quiz</div>
+    <div class="feature">⚡ AI-powered recommendations</div>
+    <div class="feature">🔒 No personal data stored</div>
+    <div class="feature">📊 VHI · Laya · Irish Life Health</div>
+    <div class="feature">🇮🇪 Irish DPC compliant</div>
   </div>
 
-  <footer>
-    <small>© 2026 Irish Health Insurance Advisor (Decision Support). This page does not provide medical, legal, or financial advice.</small>
-  </footer>
-
+  <!-- LindyEmbed Widget -->
   <script>
-    // Client-only state
-    const state = {
-      consent: null,          // 'full' | 'no-health'
-      healthConsent: false,   // explicit for step2
-      data: {}
+    window.lindyConfig = {
+      messengerId: "47eafbf1-1970-403a-8e97-50bd7f4473be"
     };
-
-    const $ = (id) => document.getElementById(id);
-    const steps = [$('step0'), $('step1'), $('step2'), $('step3')];
-
-    function setActiveStep(i){
-      steps.forEach((el, idx) => el.hidden = idx !== i);
-      $('exit').hidden = true;
-      document.querySelectorAll('[data-step-ind]').forEach((el) => {
-        const idx = Number(el.getAttribute('data-step-ind'));
-        el.classList.toggle('on', idx === i);
-      });
-      const titles = ['Privacy Notice & Consent', 'Your Needs', 'Optional Health', 'Result'];
-      $('cardTitle').textContent = titles[i] || 'Irish Health Insurance Advisor';
-    }
-
-    function clearAll(){
-      state.consent = null;
-      state.healthConsent = false;
-      state.data = {};
-      // Reset UI inputs
-      ['county','coverType','budget','lifeStage','waitingTolerance','excess','notes',
-       'chronic','maternity','mentalHealth','dentalOptical','healthNotes']
-        .forEach((id) => { const el = $(id); if(!el) return; el.value = (el.tagName==='SELECT') ? (el.querySelector('option')?.value ?? '') : ''; });
-    }
-
-    function withdraw(){
-      clearAll();
-      setActiveStep(0);
-    }
-
-    function exit(){
-      clearAll();
-      steps.forEach((el) => el.hidden = true);
-      $('exit').hidden = false;
-      document.querySelectorAll('[data-step-ind]').forEach((el) => el.classList.remove('on'));
-      $('cardTitle').textContent = 'Exited';
-    }
-
-    function validateStep1(){
-      const required = ['county','coverType','budget','lifeStage'];
-      for (const id of required){
-        if(!$(id).value) return false;
-      }
-      return true;
-    }
-
-    function computeTier(){
-      const { coverType, budget, waitingTolerance, excess } = state.data;
-
-      // Very lightweight tiering logic (non-medical):
-      // Tier 1: budget / public+ extras
-      // Tier 2: balanced semi-private
-      // Tier 3: private focus / higher budget
-      let tier = 'Tier 2 — Balanced';
-      let rationale = [];
-
-      if (budget === '<100' || coverType === 'publicPlus'){
-        tier = 'Tier 1 — Value / Public+ Extras';
-        rationale.push('Optimise for premium and core cover; consider higher excess to reduce cost.');
-      }
-      if (coverType === 'private' || budget === '>300'){
-        tier = 'Tier 3 — Private Access Focus';
-        rationale.push('Prioritise private/semi-private hospital access and faster diagnostics where available.');
-      }
-      if (budget === '100-150' && coverType === 'semiPrivate'){
-        tier = 'Tier 2 — Balanced';
-        rationale.push('Aim for strong inpatient cover with a manageable premium.');
-      }
-      if (waitingTolerance === 'high'){
-        rationale.push('Prioritise plans with good outpatient (consultant, imaging) benefits and direct settlement where possible.');
-      }
-      if (excess === 'yes'){
-        rationale.push('A voluntary excess can materially reduce premium; confirm per-claim/per-year rules.');
-      }
-
-      // Optional health nudges (only if explicit consent):
-      if (state.healthConsent){
-        const { maternity, mentalHealth, dentalOptical, chronic } = state.data;
-        if (maternity === 'yes') rationale.push('Check maternity waiting periods and benefit limits carefully.');
-        if (mentalHealth === 'yes') rationale.push('Look for counselling/psychology cover and inpatient mental health benefits.');
-        if (dentalOptical === 'yes') rationale.push('Compare routine dental/optical allowances vs premium uplift.');
-        if (chronic === 'yes') rationale.push('Outpatient limits (GP/consultant/physio) may matter more than inpatient-only benefits.');
-      }
-
-      // Always advise HIA verification
-      rationale.push('Use hia.ie to compare hospital lists, excesses, waiting periods, and exclusions.');
-
-      return { tier, rationale };
-    }
-
-    function buildResult(){
-      const { county, lifeStage, coverType, budget } = state.data;
-      const { tier, rationale } = computeTier();
-
-      $('tierPill').textContent = tier;
-      const coverTypeLabel = ({publicPlus:'Public+ Extras', semiPrivate:'Semi-private', private:'Private focus'})[coverType] || coverType;
-
-      const lines = [];
-      lines.push(`Profile (high-level): ${lifeStage}, ${county}, €${budget}/month, ${coverTypeLabel}.`);
-      lines.push('');
-      lines.push('What to look for next:');
-      rationale.forEach((x) => lines.push(`• ${x}`));
-      lines.push('');
-      lines.push('Next steps:');
-      lines.push('1) Compare shortlisted plans on hia.ie');
-      lines.push('2) Check insurer plan documents for hospital list and outpatient limits');
-      lines.push('3) Confirm waiting periods and exclusions before purchase');
-
-      $('resultText').textContent = lines.join('\n');
-    }
-
-    // Consent buttons
-    $('btnFull').addEventListener('click', () => {
-      state.consent = 'full';
-      setActiveStep(1);
-    });
-    $('btnNoHealth').addEventListener('click', () => {
-      state.consent = 'no-health';
-      setActiveStep(1);
-    });
-    $('btnExit').addEventListener('click', exit);
-    $('btnReturn').addEventListener('click', () => setActiveStep(0));
-
-    // Step 1 nav
-    $('btnBack1').addEventListener('click', () => setActiveStep(0));
-    $('btnWithdraw1').addEventListener('click', withdraw);
-    $('btnNext1').addEventListener('click', () => {
-      if(!validateStep1()){
-        alert('Please complete County, Cover type, Budget, and Who needs cover.');
-        return;
-      }
-      state.data = {
-        county: $('county').value,
-        coverType: $('coverType').value,
-        budget: $('budget').value,
-        lifeStage: $('lifeStage').value,
-        waitingTolerance: $('waitingTolerance').value,
-        excess: $('excess').value,
-        notes: $('notes').value?.trim()
-      };
-
-      // Health consent gate
-      if (state.consent === 'no-health'){
-        state.healthConsent = false;
-        $('healthGateMsg').className = 'notice ok';
-        $('healthGateMsg').innerHTML = '<p><strong>No health data mode:</strong> Health questions are disabled. Continue to results.</p>';
-        $('healthBlock').hidden = true;
-      } else {
-        $('healthGateMsg').className = 'notice warn';
-        $('healthGateMsg').innerHTML = '<p><strong>Optional health questions:</strong> If you want to answer health-related questions, click <em>Enable health questions</em>. Otherwise, continue without them.</p>';
-        $('healthBlock').hidden = false;
-      }
-
-      setActiveStep(2);
-
-      if (state.consent !== 'no-health'){
-        // Insert a small toggle button into the gate message
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = state.healthConsent ? 'Health questions enabled' : 'Enable health questions (explicit consent)';
-        btn.className = 'primary';
-        btn.style.marginTop = '10px';
-        btn.addEventListener('click', () => {
-          state.healthConsent = true;
-          btn.textContent = 'Health questions enabled';
-          $('healthGateMsg').className = 'notice ok';
-          $('healthGateMsg').innerHTML = '<p><strong>Explicit consent recorded (in-page only):</strong> You may answer or skip any health questions. You can withdraw consent anytime.</p>';
-          $('healthGateMsg').appendChild(btn);
-        });
-        $('healthGateMsg').appendChild(btn);
-      }
-    });
-
-    // Step 2 nav
-    $('btnBack2').addEventListener('click', () => setActiveStep(1));
-    $('btnWithdraw2').addEventListener('click', withdraw);
-    $('btnNext2').addEventListener('click', () => {
-      if (state.healthConsent && state.consent !== 'no-health'){
-        Object.assign(state.data, {
-          chronic: $('chronic').value,
-          maternity: $('maternity').value,
-          mentalHealth: $('mentalHealth').value,
-          dentalOptical: $('dentalOptical').value,
-          healthNotes: $('healthNotes').value?.trim()
-        });
-      }
-      buildResult();
-      setActiveStep(3);
-    });
-
-    // Step 3 nav
-    $('btnBack3').addEventListener('click', () => setActiveStep(2));
-    $('btnRestart').addEventListener('click', () => { clearAll(); setActiveStep(0); });
-    $('btnWithdraw3').addEventListener('click', withdraw);
-
-    // Default
-    setActiveStep(0);
   </script>
+  <script src="https://www.lindy.ai/embed/v1/messenger.js" async></script>
+
+  <footer>
+    Powered by <a href="https://lindy.ai" target="_blank">Lindy AI</a> ·
+    Official comparison: <a href="https://www.hia.ie" target="_blank">hia.ie</a> ·
+    MIT PE AIML Team 2 · v1.2.0
+  </footer>
 </body>
 </html>
