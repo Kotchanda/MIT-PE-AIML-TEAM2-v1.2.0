@@ -1,0 +1,95 @@
+{
+  "session_metadata": {
+    "timestamp": "2026-02-22T17:16:00+02:00",
+    "agent_version": "v1.2.0",
+    "session_id": "session-20260222-1716-1p-andrey"
+  },
+  "user_profile": {
+    "name": "Andrey Kochetov",
+    "email": "andrey.a.kochetov@gmail.com",
+    "timezone": "Europe/Sofia",
+    "cover_type": "one-parent",
+    "members": {
+      "adult_1_age": 38,
+      "children_ages": [
+        6,
+        9,
+        12
+      ],
+      "number_of_children": 3
+    },
+    "location": {
+      "county": "Cork",
+      "country": "Ireland"
+    },
+    "employment": {
+      "status": "employed",
+      "employer_group_scheme": true
+    },
+    "budget": {
+      "monthly_budget_per_person": "200+",
+      "monthly_budget_per_person_eur_min": 200,
+      "premium_preference": "higher_premium_no_excess"
+    },
+    "tax": {
+      "aware_of_tax_relief": true,
+      "claims_tax_relief": true,
+      "tax_relief_at_source_rate": 0.2
+    },
+    "current_cover": {
+      "status": "switching_providers",
+      "years_with_current_provider": 18,
+      "current_provider": null,
+      "employer_scheme_details": null
+    },
+    "health_usage": {
+      "existing_conditions_regular_treatment": "prefer_not_to_say",
+      "regular_prescription_medications": true,
+      "gp_visits_per_year": "0-1",
+      "hospital_admissions_last_3_years": "prefer_not_to_say",
+      "planned_procedures_next_12_months": "not_sure",
+      "regular_specialist_visits": false
+    },
+    "cover_priorities": {
+      "hospital_private_or_semi_private_importance": "nice_to_have",
+      "day_to_day_cover": "comprehensive",
+      "maternity_within_2_years": true,
+      "dental": true,
+      "optical": true,
+      "mental_health_counselling": true,
+      "physio_alternative_therapies": true,
+      "cancer_screening_diagnostics": "not_sure",
+      "childrens_specialist_services": true
+    },
+    "lifestyle": {
+      "activity_level": "very_active",
+      "smoker": false,
+      "international_travel_more_than_4_weeks_per_year": true
+    },
+    "care_preferences": {
+      "gp_preference": "mix_private_and_hse",
+      "provider_preference": "no_preference"
+    },
+    "other_notes": null
+  },
+  "statistics": {
+    "questions_answered": 29,
+    "total_questions": 30,
+    "completion_percentage": 96.7,
+    "profile_completeness": 0.967
+  },
+  "insurance_research": {
+    "perplexity_queries": [],
+    "pricing_currency": "EUR",
+    "pricing_year_target": 2025,
+    "notes": "No plan/pricing research fetched yet in this session."
+  },
+  "recommendations": {
+    "status": "pending_quiz_completion",
+    "shortlist": [],
+    "notes": "Recommendations will be generated after Question 30 is answered and 2025 pricing is checked (Perplexity) and cross-checked on hia.ie."
+  },
+  "conversation_summary": {
+    "brief": "User started the quiz for Irish health insurance. Cover is for a one-parent family in Cork: 38-year-old adult with three children (6, 9, 12). Employed with employer group scheme available, high budget (200+/person/month) and prefers higher premium with no excess. Wants comprehensive day-to-day cover plus maternity within 2 years, dental & optical, mental health, physio/alternative therapies, and children’s specialist services. Non-smoker, very active, travels internationally >4 weeks/year. Switching provider with ~18 years continuous cover. Several health-history items marked prefer not to say; Q30 other notes not yet answered."
+  }
+}
