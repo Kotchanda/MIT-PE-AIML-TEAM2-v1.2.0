@@ -1,8 +1,8 @@
 {
   "session_metadata": {
-    "timestamp": "2026-02-22T17:16:00+02:00",
+    "timestamp": "2026-02-22T17:18:00+02:00",
     "agent_version": "v1.2.0",
-    "session_id": "session-20260222-1716-1p-andrey"
+    "session_id": "session-20260222-1718-1p-andrey"
   },
   "user_profile": {
     "name": "Andrey Kochetov",
@@ -24,7 +24,8 @@
     },
     "employment": {
       "status": "employed",
-      "employer_group_scheme": true
+      "employer_group_scheme": true,
+      "employer_scheme_details": null
     },
     "budget": {
       "monthly_budget_per_person": "200+",
@@ -38,9 +39,12 @@
     },
     "current_cover": {
       "status": "switching_providers",
-      "years_with_current_provider": 18,
       "current_provider": null,
-      "employer_scheme_details": null
+      "duration_with_current_provider": {
+        "value": 18,
+        "unit": "months",
+        "note": "User answered '18' to a 'years or months' question; stored as months to avoid overstating duration."
+      }
     },
     "health_usage": {
       "existing_conditions_regular_treatment": "prefer_not_to_say",
@@ -70,26 +74,137 @@
       "gp_preference": "mix_private_and_hse",
       "provider_preference": "no_preference"
     },
-    "other_notes": null
+    "other_notes": "No"
   },
   "statistics": {
-    "questions_answered": 29,
+    "questions_answered": 30,
     "total_questions": 30,
-    "completion_percentage": 96.7,
-    "profile_completeness": 0.967
+    "completion_percentage": 100.0,
+    "profile_completeness": 1.0
   },
   "insurance_research": {
-    "perplexity_queries": [],
     "pricing_currency": "EUR",
     "pricing_year_target": 2025,
-    "notes": "No plan/pricing research fetched yet in this session."
+    "perplexity_queries": [
+      {
+        "timestamp": "2026-02-22T17:17:00+02:00",
+        "query": "Best Irish health insurance plans 2025 family cover Cork maternity dental optical mental health physiotherapy comprehensive day-to-day cover VHI Laya Irish Life HSF pricing",
+        "high_level_results": [
+          "Providers referenced: VHI, Laya, Irish Life Health, Level Health (plus note of HSF as a scheme).",
+          "Market context: premium increases noted across providers in 2024–2026 period.",
+          "Recommendation to use HIA comparison tool at hia.ie for plan-level benefits/price confirmation."
+        ],
+        "sources": [
+          "https://switcher.ie/health-insurance/",
+          "https://www.irishexaminer.com/business/companies/arid-41783738.html",
+          "https://www.irishexaminer.com/lifestyle/people/arid-41788874.html"
+        ]
+      },
+      {
+        "timestamp": "2026-02-22T17:17:30+02:00",
+        "query": "VHI AdvancedCare Laya Healthcare Irish Life Health comprehensive family plans 2025 2026 pricing maternity dental optical",
+        "high_level_results": [
+          "VHI AdvancedCare Day to Day example pricing (2 adults + 2 children) cited as €6,946.57/year (about €579/month) effective March 2026.",
+          "No exact plan-by-plan 2025 pricing retrieved for Laya/Irish Life within query results; only broad cumulative increase ranges.",
+          "Reminder: exact benefits (maternity/dental/optical limits, etc.) require confirmation using insurer documentation and HIA tool."
+        ],
+        "sources": [
+          "https://www.irishexaminer.com/business/companies/arid-41783738.html",
+          "https://www.irishtimes.com/business/2026/01/28/health-insurer-vhi-announces-fresh-price-hike-averaging-3/",
+          "https://switcher.ie/health-insurance/"
+        ]
+      }
+    ],
+    "notes": "Perplexity results contained one concrete VHI example price; Laya/Irish Life figures were not plan-specific and were treated as estimates pending HIA confirmation."
   },
   "recommendations": {
-    "status": "pending_quiz_completion",
-    "shortlist": [],
-    "notes": "Recommendations will be generated after Question 30 is answered and 2025 pricing is checked (Perplexity) and cross-checked on hia.ie."
+    "status": "provided",
+    "benchmark_assumptions": {
+      "family_size": 4,
+      "location": "Cork",
+      "coverage_style": "comprehensive with strong day-to-day + maternity + dental/optical + mental health + physio",
+      "excess_preference": "no excess (higher premium acceptable)"
+    },
+    "shortlist": [
+      {
+        "rank": 1,
+        "provider": "VHI Healthcare",
+        "plan_name": "AdvancedCare Day to Day",
+        "price": {
+          "period": "annual",
+          "amount_eur": 6946.57,
+          "approx_monthly_eur": 579,
+          "price_basis": "Example cited for 2 adults + 2 children (not exact match to one-parent family); use HIA for exact quote."
+        },
+        "fit_rationale": [
+          "Strong day-to-day cover (aligned to regular prescriptions)",
+          "Maternity cover needed within 2 years (mind waiting periods)",
+          "Includes/commonly includes dental/optical, mental health supports, and physio benefits on higher-tier plans",
+          "Broad hospital cover (private/semi-private nice-to-have)"
+        ],
+        "caveats": [
+          "Exact benefit limits and exact price for one-parent family must be confirmed on HIA and plan rules",
+          "Maternity typically subject to a waiting period (often 10 months on new policies)"
+        ]
+      },
+      {
+        "rank": 2,
+        "provider": "Laya Healthcare",
+        "plan_name": "Comprehensive Family Plan (exact plan TBD)",
+        "price": {
+          "period": "monthly",
+          "amount_eur_range": [
+            550,
+            650
+          ],
+          "price_basis": "Estimated range; plan-specific quote required."
+        },
+        "fit_rationale": [
+          "Target comprehensive day-to-day benefits + maternity",
+          "Often strong ancillary benefits (dental/optical, wellness) on higher plans",
+          "May suit active lifestyle with physio/therapy benefits"
+        ],
+        "caveats": [
+          "Estimated pricing only; confirm on HIA",
+          "Benefit limits vary widely by plan"
+        ]
+      },
+      {
+        "rank": 3,
+        "provider": "Irish Life Health",
+        "plan_name": "Complete Family Cover (exact plan TBD)",
+        "price": {
+          "period": "monthly",
+          "amount_eur_range": [
+            500,
+            600
+          ],
+          "price_basis": "Estimated range; plan-specific quote required."
+        },
+        "fit_rationale": [
+          "Comprehensive day-to-day with family supports",
+          "Suitable option for mental health and allied health benefits depending on plan tier",
+          "Potentially competitive pricing vs similarly comprehensive plans"
+        ],
+        "caveats": [
+          "Estimated pricing only; confirm on HIA",
+          "International travel cover may be limited; consider separate travel insurance for long trips"
+        ]
+      }
+    ],
+    "official_comparison_resource": "https://www.hia.ie",
+    "next_steps": [
+      "Run a full comparison and get exact prices on https://www.hia.ie (official HIA tool), using one-parent family and ages 38/6/9/12.",
+      "Check employer group scheme options and pricing—group schemes can be materially cheaper or include upgrades.",
+      "Confirm maternity waiting periods and any switching rules; ensure there is no break in cover.",
+      "Confirm outpatient (GP/consultant), prescription, dental, optical, mental health, and physio benefit limits for each shortlisted plan.",
+      "If you travel >4 weeks/year, verify overseas emergency cover limitations and consider standalone travel insurance if needed."
+    ],
+    "regulatory_notes": [
+      "Lifetime Community Rating (LCR): applies from age 25 if you are without cover; maintaining continuous cover helps avoid loadings."
+    ]
   },
   "conversation_summary": {
-    "brief": "User started the quiz for Irish health insurance. Cover is for a one-parent family in Cork: 38-year-old adult with three children (6, 9, 12). Employed with employer group scheme available, high budget (200+/person/month) and prefers higher premium with no excess. Wants comprehensive day-to-day cover plus maternity within 2 years, dental & optical, mental health, physio/alternative therapies, and children’s specialist services. Non-smoker, very active, travels internationally >4 weeks/year. Switching provider with ~18 years continuous cover. Several health-history items marked prefer not to say; Q30 other notes not yet answered."
+    "brief": "Completed 30-question quiz for Irish health insurance. Andrey (38) in Cork seeks one-parent family cover for three children (6, 9, 12). Employed with an employer group scheme, high budget (200+/person/month), prefers higher premium with no excess. Wants comprehensive day-to-day plus maternity within 2 years, dental & optical, mental health, physio/alternative therapies, and children’s specialist services. Very active, non-smoker, travels internationally >4 weeks/year. Switching provider; duration entered as 18 (stored as months). Perplexity research found a concrete VHI AdvancedCare Day to Day example price and general market increase context; final shortlist provided with a strong emphasis on confirming exact prices/benefits on hia.ie."
   }
 }
