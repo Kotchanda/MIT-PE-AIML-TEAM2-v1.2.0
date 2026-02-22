@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Irish Health Insurance Advisor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a6b3c 0%, #0d4a2a 50%, #0a3520 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .header {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 24px;
+      max-width: 600px;
+    }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    .header p {
+      font-size: 1rem;
+      opacity: 0.85;
+      line-height: 1.5;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      color: #fff;
+      margin-bottom: 12px;
+      backdrop-filter: blur(4px);
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 480px;
+      height: 680px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.1);
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: block;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.75rem;
+    }
+    .footer a { color: rgba(255,255,255,0.7); text-decoration: none; }
+    .footer a:hover { color: #fff; }
+    @media (max-width: 520px) {
+      .header h1 { font-size: 1.5rem; }
+      .chat-container { height: 580px; border-radius: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">🔒 GDPR Compliant · Irish DPC</div>
+    <h1>🛡️ Irish Health Insurance Advisor</h1>
+    <p>Get personalised health insurance recommendations in minutes. Your data is never stored.</p>
+  </div>
+
+  <div class="chat-container">
+    <iframe
+      src="https://lindy.ai/embed/47eafbf1-1970-403a-8e97-50bd7f4473be"
+      allow="microphone"
+      title="Irish Health Insurance Advisor"
+    ></iframe>
+  </div>
+
+  <div class="footer">
+    <p>Powered by <a href="https://lindy.ai" target="_blank">Lindy AI</a> &nbsp;·&nbsp;
+    Official comparison: <a href="https://www.hia.ie" target="_blank">hia.ie</a> &nbsp;·&nbsp;
+    <a href="https://www.dataprotection.ie" target="_blank">Irish DPC</a></p>
+    <p style="margin-top:6px">MIT PE AIML Team 2 · v1.2.0</p>
+  </div>
+</body>
+</html>
