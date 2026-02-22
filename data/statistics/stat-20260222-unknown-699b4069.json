@@ -1,0 +1,18 @@
+{
+  "session_id": "699b4069002ae84f475cd622",
+  "timestamp": "2026-02-22",
+  "agent_version": "v1.2.0",
+  "consent_type": "no-health-data",
+  "cover_type_category": "unknown",
+  "age_bracket": "unknown",
+  "region_category": "unknown",
+  "budget_bracket": "unknown",
+  "health_complexity_score": "low",
+  "completion_status": "withdrawn",
+  "questions_answered": 0,
+  "total_questions": 20,
+  "completion_percentage": 0,
+  "recommendation_tier": "not-made",
+  "provider_recommended": "not-made",
+  "data_protection_notice": "No personal data stored. Anonymised statistics only. GDPR Article 89 research exemption."
+}
